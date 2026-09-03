@@ -1,0 +1,547 @@
+/* ==========================================================================
+   The hand-written layer: SVG filter and texture work, the opening sequence,
+   and the footprint animations. Tailwind does none of this.
+   ========================================================================== */
+
+/* Leaflet's own container. It carries no tiles — only the SVG overlay — so
+   everything it would normally paint is stripped back to the desk. */
+.mm-map {
+  position: absolute;
+  inset: 0;
+  /* Leaflet's panes sit at z-index 400+ inside their container. Pinning the
+     container to 0 keeps the whole map beneath the chrome that floats over it. */
+  z-index: 0;
+  background: transparent;
+  outline: none;
+}
+
+.mm-map:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: -4px;
+}
+
+.mm-map.leaflet-container {
+  background: transparent;
+  font: inherit;
+}
+
+/* Tailwind's preflight sets `img { max-width: 100%; height: auto }`, and
+   Leaflet's tiles live in an absolutely-positioned container with no width —
+   so every tile collapses to zero pixels. Leaflet's own sizing has to win. */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-container img.leaflet-tile {
+  width: 256px;
+  height: 256px;
+  /* Leaflet sets `plus-lighter` here as a workaround for a Chromium seam bug.
+     With two zoom levels briefly on screen at once, the overlap adds up and
+     blows out to white — which under a soft mask reads as a halo around the
+     campus. Normal blending, and the seams are invisible under the wash. */
+  mix-blend-mode: normal;
+}
+
+.mm-map .leaflet-overlay-pane svg {
+  /* Leaflet sizes the overlay; the scene fills it exactly. */
+  overflow: visible;
+}
+
+/* Promote the moving panes to their own compositing layers, so a pan is a GPU
+   transform of an already-rasterised layer rather than a repaint of it. */
+.mm-map .leaflet-tile-pane,
+.mm-map .leaflet-overlay-pane {
+  will-change: transform;
+}
+
+/* --------------------------------------------------------------------------
+   The surveyed basemap, washed into the palette.
+
+   The tiles are grey-on-white by design (a label-free CARTO basemap), so a
+   sepia pass plus a hard contrast pull lands them squarely on --parchment and
+   --ink without a single colour outside the palette surviving. The paper grain
+   and the age-darkened corners are laid over the top in SVG, so the two styles
+   share one texture rather than approximating each other.
+   -------------------------------------------------------------------------- */
+.mm-map .leaflet-tile-pane {
+  /* Bare ground beyond the downloaded tiles is desk, not paper — the parchment
+     belongs to the campus, and a pale halo around the mask gives the game
+     away. */
+  background: transparent;
+}
+
+.mm-tiles {
+  /*
+   * No filter. The parchment wash is baked into the tiles' own palettes by
+   * `npm run wash:tiles`, so there is nothing to compute at runtime. A filter
+   * here — CSS or SVG — is re-rasterised on every frame of every pan and zoom,
+   * which is the single most expensive thing this map could do to itself.
+   */
+  image-rendering: auto;
+}
+
+/* The ground under the tiles, so the edges of the downloaded area and any
+   gap while a tile loads read as paper rather than as a hole. */
+.mm-map--surveyed {
+  background: var(--wood);
+}
+
+/*
+ * Paper grain, as a static background on the map container rather than as
+ * feTurbulence inside the SVG that Leaflet transforms. The browser rasterises
+ * this data URI once and tiles it; the SVG version was re-filtered on every
+ * frame. Paper does not pan with the map anyway — the sheet is the thing you
+ * are looking through, not part of the terrain.
+ */
+.mm-map--surveyed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 450;
+  opacity: 0.62;
+  /* Noise on top, then the warm ageing that used to come from the SVG's
+     corner gradients. Both are static: no per-frame cost at all. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.17 0 0 0 0 0.11 0 0 0 0 0.06 0 0 0 0.5 0'/%3E%3C/filter%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.022' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.44 0.18 0.06 0 0.1 0.32 0.16 0.05 0 0.07 0.19 0.1 0.04 0 0.04 0 0 0 0.34 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23g)'/%3E%3Crect width='260' height='260' filter='url(%23f)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 12% 6%, color-mix(in srgb, var(--sepia-wash) 40%, transparent), transparent 55%),
+    radial-gradient(ellipse at 92% 12%, color-mix(in srgb, var(--sepia-wash) 34%, transparent), transparent 52%),
+    radial-gradient(ellipse at 8% 94%, color-mix(in srgb, var(--sepia-wash) 38%, transparent), transparent 55%),
+    radial-gradient(ellipse at 95% 90%, color-mix(in srgb, var(--sepia-wash) 42%, transparent), transparent 58%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 260px 260px, cover, cover, cover, cover;
+}
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .mm-map--surveyed::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.17 0 0 0 0 0.11 0 0 0 0 0.06 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23f)'/%3E%3C/svg%3E");
+  }
+}
+
+.mm-map--surveyed::after {
+  /* A soft vignette, the way an old sheet darkens where it has been handled. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 48%,
+    transparent 34%,
+    color-mix(in srgb, var(--sepia-wash) 44%, transparent) 100%
+  );
+  z-index: 500;
+}
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .mm-map--surveyed::after {
+    background: radial-gradient(ellipse at 50% 48%, transparent 42%, rgba(140, 106, 67, 0.26) 100%);
+  }
+}
+
+/* Leaflet's scale bar, in the map's own clothes. */
+/* Lift the scale bar and the credit clear of the instrument strip, and of the
+   wax seal that sits proud of its top edge. */
+.mm-map .leaflet-bottom.leaflet-left,
+.mm-map .leaflet-bottom.leaflet-right {
+  bottom: 10.75rem;
+}
+
+.mm-map .leaflet-bottom.leaflet-right {
+  /* Clear of the instrument column on the right. */
+  right: 3.25rem;
+}
+
+/* On a short screen the strip is proportionally taller; give it more room. */
+@media (max-height: 720px) {
+  .mm-map .leaflet-bottom.leaflet-left,
+  .mm-map .leaflet-bottom.leaflet-right {
+    bottom: 11.5rem;
+  }
+}
+
+.mm-map .leaflet-control-attribution {
+  max-width: 70vw;
+}
+
+.mm-map .leaflet-control-scale-line {
+  font-family: 'IM Fell English', 'IM Fell DW Pica', Georgia, serif;
+  font-size: 12px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--parchment) 82%, transparent);
+  border: 1px solid var(--rule-strong);
+  border-top: none;
+  border-radius: 0 0 3px 3px;
+  padding: 1px 6px 2px;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.mm-map .leaflet-control-attribution {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 10.5px;
+  color: var(--ink-faded);
+  background: color-mix(in srgb, var(--parchment) 74%, transparent);
+  padding: 1px 6px;
+}
+
+.mm-map .leaflet-control-attribution a {
+  color: var(--sepia-wash);
+}
+
+.mm-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* Leaflet only takes custody of an overlay's element once the layer is added
+   to the map, so the inked sheet is hidden outright while the surveyed
+   basemap has the floor. */
+.mm-map--surveyed .mm-canvas--base {
+  display: none;
+}
+
+/* Text set in the map's own hand. */
+.mm-label {
+  font-family: 'IM Fell English', 'IM Fell DW Pica', Georgia, serif;
+  font-weight: 400;
+  paint-order: stroke fill;
+  stroke: var(--parchment);
+  stroke-width: 3px;
+  stroke-opacity: 0.55;
+  stroke-linejoin: round;
+}
+
+.mm-title {
+  letter-spacing: 0.06em;
+}
+
+.mm-marginalia {
+  font-style: italic;
+}
+
+.mm-zone--lit .mm-label {
+  stroke-opacity: 0.8;
+}
+
+/* --------------------------------------------------------------------------
+   Footprints
+   -------------------------------------------------------------------------- */
+.mm-print {
+  opacity: 0;
+  /* Match the SVG transform attribute's frame of reference, so translate() is
+     in viewBox units from the origin rather than about the element's centre. */
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+/* A walker's print: in over 200 ms, then six seconds dissolving away. */
+@keyframes mm-print-walk {
+  0% {
+    opacity: 0;
+  }
+  3.2% {
+    opacity: 0.8;
+  }
+  22% {
+    opacity: 0.74;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.mm-print--walk {
+  animation: mm-print-walk 6.2s linear forwards;
+}
+
+/* Standing still: present, but plainly not going anywhere. */
+@keyframes mm-print-still {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.mm-print--still {
+  opacity: 0.8;
+  animation:
+    mm-print-appear 200ms ease-out both,
+    mm-print-still 4s ease-in-out 200ms infinite;
+}
+
+@keyframes mm-print-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
+/* Reduced motion: prints simply exist. No fade trail, no pulse. */
+.mm-print--static,
+.mm-print--still-static {
+  opacity: 0.8;
+  animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   The opening sequence.
+
+   Three fold panels peel back in turn while the ink draws itself onto the
+   page. 1.4 s in total, and it happens exactly once.
+   -------------------------------------------------------------------------- */
+.mm-fold-panel {
+  transform-box: fill-box;
+  transform-origin: left center;
+  fill: var(--wood-deep);
+  animation: mm-fold-open 620ms cubic-bezier(0.32, 0.72, 0.28, 1) both;
+}
+
+.mm-fold-panel--2 {
+  transform-origin: right center;
+  animation-delay: 240ms;
+}
+
+.mm-fold-panel--3 {
+  transform-origin: left center;
+  animation-delay: 470ms;
+}
+
+@keyframes mm-fold-open {
+  0% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+}
+
+/* The ink bleeding onto the page: lines draw themselves from one end.
+   `pathLength="1"` normalises every path, so one duration suits them all. */
+.mm-opening .mm-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mm-draw 1s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+}
+
+.mm-opening .mm-layer--roads .mm-draw {
+  animation-delay: 120ms;
+}
+
+.mm-opening .mm-layer--buildings .mm-draw {
+  animation-delay: 300ms;
+}
+
+@keyframes mm-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Everything that cannot be drawn stroke-first simply bleeds in. */
+.mm-opening .mm-layer--ground,
+.mm-opening .mm-layer--paths,
+.mm-opening .mm-layer--labels,
+.mm-opening .mm-layer--furniture {
+  animation: mm-bleed-in 900ms ease-out both;
+}
+
+.mm-opening .mm-layer--labels {
+  animation-delay: 500ms;
+}
+
+.mm-opening .mm-layer--furniture {
+  animation-delay: 700ms;
+}
+
+@keyframes mm-bleed-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Closing the map wipes the ink away in reverse. */
+.mm-closing .mm-layer {
+  animation: mm-bleed-out 700ms ease-in both;
+}
+
+.mm-closing .mm-layer--furniture {
+  animation-delay: 0ms;
+}
+
+.mm-closing .mm-layer--labels {
+  animation-delay: 90ms;
+}
+
+.mm-closing .mm-layer--buildings {
+  animation-delay: 200ms;
+}
+
+@keyframes mm-bleed-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion. The unfold and the ink-draw are replaced by a cross-fade,
+   and nothing on the map pulses.
+   -------------------------------------------------------------------------- */
+.mm-canvas.mm-reduced .mm-fold-panel {
+  animation: none;
+  opacity: 0;
+}
+
+.mm-canvas.mm-reduced .mm-draw {
+  stroke-dasharray: none;
+  animation: none;
+}
+
+.mm-canvas.mm-reduced.mm-opening .mm-layer {
+  animation: mm-bleed-in 420ms linear both;
+  animation-delay: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-fold-panel {
+    animation: none;
+    opacity: 0;
+  }
+
+  .mm-opening .mm-draw {
+    stroke-dasharray: none;
+    animation: none;
+  }
+
+  .mm-opening .mm-layer {
+    animation: mm-bleed-in 400ms linear both;
+    animation-delay: 0ms;
+  }
+
+  .mm-print--walk,
+  .mm-print--still {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Interactive bits inside the SVG
+   -------------------------------------------------------------------------- */
+.mm-cluster__hit,
+.mm-zone[role='button'] {
+  cursor: pointer;
+}
+
+.mm-zone[role='button']:focus-visible text {
+  fill: var(--ember);
+}
+
+.mm-zone[role='button']:focus-visible {
+  outline: none;
+}
+
+.mm-zone[role='button']:focus-visible rect {
+  fill: color-mix(in srgb, var(--ember) 14%, transparent);
+  stroke: var(--ember);
+  stroke-width: 1.5;
+}
+
+.mm-cluster__hit:focus-visible circle {
+  stroke: var(--ember);
+  stroke-width: 3;
+}
+
+/* The wood the sheet lies on. */
+.mm-desk {
+  background:
+    repeating-linear-gradient(
+      91.4deg,
+      color-mix(in srgb, var(--wood) 97%, var(--parchment)) 0px,
+      var(--wood) 1.5px,
+      var(--wood-deep) 2.5px,
+      var(--wood) 3.5px,
+      color-mix(in srgb, var(--wood) 94%, var(--ink)) 5px,
+      var(--wood-deep) 6.5px
+    ),
+    repeating-linear-gradient(
+      88.6deg,
+      transparent 0px,
+      color-mix(in srgb, var(--ink) 28%, transparent) 23px,
+      transparent 47px,
+      color-mix(in srgb, var(--sepia-wash) 12%, transparent) 78px,
+      transparent 131px
+    ),
+    radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--sepia-wash) 26%, transparent), transparent 68%),
+    var(--wood-deep);
+}
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .mm-desk {
+    background: repeating-linear-gradient(91.4deg, #2c1a12 0px, #251610 1.5px, #1a0f0a 3px, #201209 5px);
+  }
+}
+
+/* The folded sheet on the entry screen. */
+.mm-folded {
+  filter: drop-shadow(0 18px 34px rgb(0 0 0 / 55%));
+}
+
+@keyframes mm-breathe {
+  0%,
+  100% {
+    transform: rotate(-1.2deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-0.6deg) translateY(-5px);
+  }
+}
+
+.mm-folded--idle {
+  animation: mm-breathe 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-folded--idle {
+    animation: none;
+  }
+}
+
+/* The entry screen's refusal: the sheet twitches and stays shut. */
+@keyframes mm-shake {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-7px) rotate(-0.5deg); }
+  38% { transform: translateX(6px) rotate(0.4deg); }
+  58% { transform: translateX(-4px); }
+  78% { transform: translateX(3px); }
+}
+
+.mm-shake {
+  animation: mm-shake 480ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-shake {
+    animation: none;
+    outline: 2px solid var(--ember);
+    outline-offset: 6px;
+    border-radius: 6px;
+  }
+}

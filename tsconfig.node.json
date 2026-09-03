@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "eslint.config.js",
+    "scripts/**/*.ts",
+    "src/types",
+    "src/lib/projection.ts",
+    "src/lib/walkgraph.ts",
+    "src/data/campus.ts",
+    "src/data/zones.ts"
+  ]
+}

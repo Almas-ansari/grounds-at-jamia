@@ -1,0 +1,338 @@
+[
+ {
+  "name": "Batla Hospital",
+  "osmId": "node/7544955499",
+  "lat": 28.56701,
+  "lng": 77.284303
+ },
+ {
+  "name": "Batla House",
+  "osmId": "relation/3800723",
+  "lat": 28.565851,
+  "lng": 77.285734
+ },
+ {
+  "name": "Batla House Qabristan",
+  "osmId": "way/1038152730",
+  "lat": 28.565254,
+  "lng": 77.28714
+ },
+ {
+  "name": "Dastarkhan Canteen",
+  "osmId": "node/11269141398",
+  "lat": 28.562807,
+  "lng": 77.281411
+ },
+ {
+  "name": "Dean Student Welfare, JMI",
+  "osmId": "node/11269141401",
+  "lat": 28.559948,
+  "lng": 77.283649
+ },
+ {
+  "name": "Delhi Metro Magenta Line",
+  "osmId": "way/563894911",
+  "lat": 28.561409,
+  "lng": 77.280664
+ },
+ {
+  "name": "Delhi Metro Magenta Line",
+  "osmId": "way/610024763",
+  "lat": 28.561442,
+  "lng": 77.280635
+ },
+ {
+  "name": "Department Lawn",
+  "osmId": "node/11235332746",
+  "lat": 28.561404,
+  "lng": 77.281483
+ },
+ {
+  "name": "Department of Economics",
+  "osmId": "way/351388619",
+  "lat": 28.562177,
+  "lng": 77.280976
+ },
+ {
+  "name": "Department Of English",
+  "osmId": "way/1218204906",
+  "lat": 28.560317,
+  "lng": 77.282157
+ },
+ {
+  "name": "Department of Geography",
+  "osmId": "way/1218697520",
+  "lat": 28.561813,
+  "lng": 77.281534
+ },
+ {
+  "name": "Engineering Canteen",
+  "osmId": "node/11235332747",
+  "lat": 28.559781,
+  "lng": 77.278274
+ },
+ {
+  "name": "Faculty of Architecture & Ekistics, JMI",
+  "osmId": "way/1463684036",
+  "lat": 28.559274,
+  "lng": 77.279563
+ },
+ {
+  "name": "FET AUDITORIUM",
+  "osmId": "node/2583932285",
+  "lat": 28.559801,
+  "lng": 77.279639
+ },
+ {
+  "name": "FX YOUTH",
+  "osmId": "way/252334020",
+  "lat": 28.559042,
+  "lng": 77.283511
+ },
+ {
+  "name": "Gulistan-e-Ghalib",
+  "osmId": "way/634162024",
+  "lat": 28.561427,
+  "lng": 77.28092
+ },
+ {
+  "name": "Gulistan-i- galib",
+  "osmId": "node/11274649160",
+  "lat": 28.560358,
+  "lng": 77.282763
+ },
+ {
+  "name": "Indian Bank",
+  "osmId": "node/2583924590",
+  "lat": 28.561299,
+  "lng": 77.279675
+ },
+ {
+  "name": "Jama Masjid - Zakir Nagar",
+  "osmId": "way/1038326206",
+  "lat": 28.567407,
+  "lng": 77.280634
+ },
+ {
+  "name": "Jamia College",
+  "osmId": "node/6475194135",
+  "lat": 28.560938,
+  "lng": 77.280081
+ },
+ {
+  "name": "Jamia College",
+  "osmId": "node/6475810266",
+  "lat": 28.561103,
+  "lng": 77.28009
+ },
+ {
+  "name": "Jamia Masjid",
+  "osmId": "node/367276753",
+  "lat": 28.562528,
+  "lng": 77.282726
+ },
+ {
+  "name": "Jamia Masjid Batla House",
+  "osmId": "way/1038152728",
+  "lat": 28.566255,
+  "lng": 77.28521
+ },
+ {
+  "name": "Jamia Milia Islamia School ground",
+  "osmId": "node/11274654303",
+  "lat": 28.563805,
+  "lng": 77.28354
+ },
+ {
+  "name": "Jamia Millia Islamia",
+  "osmId": "node/3284155408",
+  "lat": 28.563049,
+  "lng": 77.286339
+ },
+ {
+  "name": "Jamia Millia Islamia",
+  "osmId": "node/5777631562",
+  "lat": 28.563067,
+  "lng": 77.286319
+ },
+ {
+  "name": "Jamia Millia Islamia",
+  "osmId": "node/6547772117",
+  "lat": 28.563034,
+  "lng": 77.286359
+ },
+ {
+  "name": "Jamia Millia Islamia",
+  "osmId": "way/278041499",
+  "lat": 28.563889,
+  "lng": 77.282182
+ },
+ {
+  "name": "Jamia Millia Islamia",
+  "osmId": "relation/3695425",
+  "lat": 28.560753,
+  "lng": 77.284517
+ },
+ {
+  "name": "Jamia Millia Islamia",
+  "osmId": "relation/15097864",
+  "lat": 28.563051,
+  "lng": 77.286339
+ },
+ {
+  "name": "Jammu and Kashmir Bank",
+  "osmId": "way/1038152729",
+  "lat": 28.56585,
+  "lng": 77.285125
+ },
+ {
+  "name": "JMI , FET LIBRARY",
+  "osmId": "way/252332070",
+  "lat": 28.559359,
+  "lng": 77.278663
+ },
+ {
+  "name": "JMI University Basketball Court",
+  "osmId": "way/690251639",
+  "lat": 28.561399,
+  "lng": 77.278446
+ },
+ {
+  "name": "JMI University Sports Complex",
+  "osmId": "way/252333089",
+  "lat": 28.562506,
+  "lng": 77.279072
+ },
+ {
+  "name": "JMI, Teachers quarters, C Block",
+  "osmId": "way/252335533",
+  "lat": 28.564478,
+  "lng": 77.281214
+ },
+ {
+  "name": "Joga Bai",
+  "osmId": "relation/3800724",
+  "lat": 28.566533,
+  "lng": 77.283819
+ },
+ {
+  "name": "MA Ansari Auditorium, JMI",
+  "osmId": "node/11269141400",
+  "lat": 28.56044,
+  "lng": 77.283517
+ },
+ {
+  "name": "Main road",
+  "osmId": "way/164702314",
+  "lat": 28.566799,
+  "lng": 77.282143
+ },
+ {
+  "name": "Main road",
+  "osmId": "way/1074478025",
+  "lat": 28.565469,
+  "lng": 77.28553
+ },
+ {
+  "name": "Main road",
+  "osmId": "way/1229647035",
+  "lat": 28.564688,
+  "lng": 77.287032
+ },
+ {
+  "name": "Masjid Shadab",
+  "osmId": "way/1038152733",
+  "lat": 28.567304,
+  "lng": 77.287197
+ },
+ {
+  "name": "Maulana Mohamed Ali Jauhar Marg",
+  "osmId": "way/176159963",
+  "lat": 28.561745,
+  "lng": 77.28144
+ },
+ {
+  "name": "Maulana Mohamed Ali Jauhar Marg",
+  "osmId": "way/278046577",
+  "lat": 28.561694,
+  "lng": 77.281484
+ },
+ {
+  "name": "Mosque",
+  "osmId": "node/11269145031",
+  "lat": 28.56562,
+  "lng": 77.280808
+ },
+ {
+  "name": "Mughal garden",
+  "osmId": "node/11274654304",
+  "lat": 28.562467,
+  "lng": 77.284319
+ },
+ {
+  "name": "New Boys Hostel, JMI",
+  "osmId": "node/11262433605",
+  "lat": 28.565785,
+  "lng": 77.281262
+ },
+ {
+  "name": "Office of the provost Hall of boys residence",
+  "osmId": "node/11274649159",
+  "lat": 28.560562,
+  "lng": 77.280124
+ },
+ {
+  "name": "Okhla",
+  "osmId": "node/7788133646",
+  "lat": 28.559717,
+  "lng": 77.278081
+ },
+ {
+  "name": "Okhla Road",
+  "osmId": "way/1505731204",
+  "lat": 28.562431,
+  "lng": 77.285923
+ },
+ {
+  "name": "polytechnic ground",
+  "osmId": "node/11235290610",
+  "lat": 28.563036,
+  "lng": 77.280952
+ },
+ {
+  "name": "Rahmani Masjid",
+  "osmId": "way/1038152727",
+  "lat": 28.566692,
+  "lng": 77.282618
+ },
+ {
+  "name": "Reading Hall, JMI",
+  "osmId": "node/11254451608",
+  "lat": 28.561522,
+  "lng": 77.281943
+ },
+ {
+  "name": "Reading Hall, JMI",
+  "osmId": "node/11269141397",
+  "lat": 28.562575,
+  "lng": 77.281838
+ },
+ {
+  "name": "Shapes Of You Fitness Club",
+  "osmId": "node/10960475397",
+  "lat": 28.565958,
+  "lng": 77.282348
+ },
+ {
+  "name": "Tikona Park Okhla",
+  "osmId": "way/1038152735",
+  "lat": 28.558736,
+  "lng": 77.285582
+ },
+ {
+  "name": "Zakir Hussain Library (JMI)",
+  "osmId": "node/11235310919",
+  "lat": 28.562594,
+  "lng": 77.281506
+ }
+]

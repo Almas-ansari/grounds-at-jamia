@@ -1,0 +1,41 @@
+# Render deployment (free tier).
+#
+#   1. Push this repo to GitHub.
+#   2. In Render: New → Blueprint → point it at the repo.
+#   3. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the dashboard.
+#
+# It is a static site: there is no server of ours anywhere. The browser talks
+# to Supabase directly, and every rule about who may see whom is enforced there.
+services:
+  - type: web
+    name: grounds-at-jamia
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+    headers:
+      # The service worker must never be served stale, or a deploy can strand
+      # a browser on an old bundle.
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        # Geolocation is the whole point; everything else is refused outright.
+        value: geolocation=(self), camera=(), microphone=(), payment=(), usb=()
+    routes:
+      # A single-page app: every path resolves to the shell.
+      - type: rewrite
+        source: /*
+        destination: /index.html

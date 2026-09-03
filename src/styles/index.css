@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Palette — the whole of it. Six inks and two derived wood tones, and the
+   wood is mixed from the same six so nothing strays outside.
+   ========================================================================== */
+:root {
+  --parchment: #e3d2a8;
+  --parchment-deep: #c9b183;
+  --ink: #2b1b10;
+  --ink-faded: #6b4e33;
+  --sepia-wash: #8c6a43;
+  --ember: #a6431f;
+
+  /* The desk the map lies on. Mixed from --ink and --sepia-wash. */
+  --wood: color-mix(in srgb, var(--ink) 82%, var(--sepia-wash));
+  --wood-deep: color-mix(in srgb, var(--ink) 94%, var(--sepia-wash));
+
+  --rule: color-mix(in srgb, var(--ink) 28%, transparent);
+  --rule-strong: color-mix(in srgb, var(--ink) 52%, transparent);
+
+  --focus-ring: var(--ember);
+
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fallback for engines without color-mix. */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  :root {
+    --wood: #251610;
+    --wood-deep: #1a0f0a;
+    --rule: rgba(43, 27, 16, 0.28);
+    --rule-strong: rgba(43, 27, 16, 0.52);
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--wood-deep);
+    color: var(--ink);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: 'IM Fell English', 'IM Fell DW Pica', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    margin: 0;
+  }
+
+  /* Focus is always visible, on every control, in a colour that survives the
+     parchment behind it. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  button,
+  [role='button'],
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--ember) 30%, transparent);
+  }
+}
+
+@layer components {
+  /* A control pressed into brass and sealed with wax. Not a Material button. */
+  .brass {
+    position: relative;
+    border: 1px solid var(--rule-strong);
+    background:
+      linear-gradient(
+        168deg,
+        color-mix(in srgb, var(--parchment) 88%, var(--sepia-wash)) 0%,
+        color-mix(in srgb, var(--parchment-deep) 92%, var(--sepia-wash)) 100%
+      );
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--parchment) 70%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--ink) 22%, transparent),
+      0 1px 2px color-mix(in srgb, var(--ink) 35%, transparent);
+    color: var(--ink);
+    transition:
+      transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      box-shadow 140ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      background 140ms linear;
+  }
+
+  .brass:hover:not(:disabled) {
+    background: linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--parchment) 96%, var(--sepia-wash)) 0%,
+      color-mix(in srgb, var(--parchment-deep) 96%, var(--sepia-wash)) 100%
+    );
+  }
+
+  .brass:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: inset 0 1px 3px color-mix(in srgb, var(--ink) 40%, transparent);
+  }
+
+  .brass:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .brass--pressed {
+    background: linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--parchment-deep) 80%, var(--sepia-wash)) 0%,
+      color-mix(in srgb, var(--sepia-wash) 55%, var(--parchment-deep)) 100%
+    );
+    box-shadow: inset 0 2px 4px color-mix(in srgb, var(--ink) 45%, transparent);
+  }
+
+  /* The wax seal that fastens the instrument strip to the map. */
+  .wax-seal {
+    background: radial-gradient(
+      circle at 34% 30%,
+      color-mix(in srgb, var(--ember) 92%, var(--parchment)) 0%,
+      var(--ember) 45%,
+      color-mix(in srgb, var(--ember) 62%, var(--ink)) 100%
+    );
+    box-shadow:
+      inset 0 1px 2px color-mix(in srgb, var(--parchment) 40%, transparent),
+      0 1px 3px color-mix(in srgb, var(--ink) 55%, transparent);
+  }
+
+  /* Deckled sheet used by drawers and dialogs. */
+  .sheet {
+    background:
+      radial-gradient(
+        ellipse at 12% 4%,
+        color-mix(in srgb, var(--parchment-deep) 55%, transparent) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse at 92% 96%,
+        color-mix(in srgb, var(--parchment-deep) 60%, transparent) 0%,
+        transparent 62%
+      ),
+      var(--parchment);
+    border: 1px solid var(--rule-strong);
+    box-shadow: 0 -8px 32px color-mix(in srgb, var(--ink) 55%, transparent);
+  }
+
+  .rule-hair {
+    border-color: var(--rule);
+  }
+
+  /* Text set in the map's hand. */
+  .hand {
+    font-family: 'IM Fell English', 'IM Fell DW Pica', Georgia, serif;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}

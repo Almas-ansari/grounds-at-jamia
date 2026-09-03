@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5" />
+    <meta name="theme-color" content="#2B1B10" />
+    <meta name="color-scheme" content="light" />
+    <title>The Grounds at Jamia</title>
+    <meta
+      name="description"
+      content="A living map of the Jamia Millia Islamia campus, drawn as an aged parchment. Nobody appears on it unless they choose to."
+    />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Two families, both open licence (IM Fell English is public domain via
+         the Fell Types revival; Crimson Pro is SIL OFL). -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      This map is drawn in the browser and needs JavaScript. The campus outlines come from
+      OpenStreetMap contributors.
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

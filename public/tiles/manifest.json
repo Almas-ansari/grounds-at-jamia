@@ -1,0 +1,17 @@
+{
+  "source": "OpenStreetMap standard raster",
+  "attribution": "© OpenStreetMap contributors",
+  "fetchedAt": "2026-09-02T22:32:41.893Z",
+  "minZoom": 15,
+  "maxZoom": 18,
+  "bbox": [
+    77.27550198735634,
+    28.55641956544034,
+    77.28907931264366,
+    28.569257034559662
+  ],
+  "tiles": 186,
+  "bytes": 853832,
+  "washed": true,
+  "washedAt": "2026-09-03T12:56:59.751Z"
+}

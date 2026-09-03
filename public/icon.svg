@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>The Grounds at Jamia</title>
+  <defs>
+    <filter id="g" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="7" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0.44 0.18 0.06 0 0.10  0.32 0.16 0.05 0 0.07  0.19 0.10 0.04 0 0.04  0 0 0 0 0.45"/>
+    </filter>
+    <filter id="q" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="23" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#2B1B10"/>
+  <g filter="url(#q)">
+    <rect x="56" y="56" width="400" height="400" rx="18" fill="#E3D2A8"/>
+  </g>
+  <rect x="56" y="56" width="400" height="400" rx="18" fill="url(#g)" opacity="0.55"/>
+  <g filter="url(#q)">
+    <rect x="86" y="86" width="340" height="340" rx="8" fill="none" stroke="#2B1B10" stroke-opacity="0.55" stroke-width="7"/>
+  </g>
+  <!-- two footprints walking north-east -->
+  <g fill="#2B1B10" transform="translate(214 306) rotate(28) scale(7.4)">
+    <path d="M1.05 -6.2C3.1 -5.4 4 -3.1 3.55 -0.85C3.2 0.95 2.05 2.2 1.75 3.85C1.45 5.5 2.15 6.55 1.35 7.45C0.5 8.4 -1.75 8.35 -2.5 7.15C-3.2 6 -2.5 4.45 -2.7 2.9C-2.95 1 -3.85 -0.6 -3.5 -2.5C-3.15 -4.4 -1.15 -6 0.15 -6.15Z"/>
+    <ellipse cx="2" cy="-7.35" rx="1.05" ry="0.85" transform="rotate(14 2 -7.35)"/>
+    <ellipse cx="0.15" cy="-7.95" rx="0.72" ry="0.62"/>
+    <ellipse cx="-1.35" cy="-7.7" rx="0.62" ry="0.55"/>
+    <ellipse cx="-2.6" cy="-7.15" rx="0.55" ry="0.48"/>
+    <ellipse cx="-3.6" cy="-6.35" rx="0.46" ry="0.42"/>
+  </g>
+  <g fill="#A6431F" transform="translate(300 232) rotate(28) scale(-7.4 7.4)">
+    <path d="M1.05 -6.2C3.1 -5.4 4 -3.1 3.55 -0.85C3.2 0.95 2.05 2.2 1.75 3.85C1.45 5.5 2.15 6.55 1.35 7.45C0.5 8.4 -1.75 8.35 -2.5 7.15C-3.2 6 -2.5 4.45 -2.7 2.9C-2.95 1 -3.85 -0.6 -3.5 -2.5C-3.15 -4.4 -1.15 -6 0.15 -6.15Z"/>
+    <ellipse cx="2" cy="-7.35" rx="1.05" ry="0.85" transform="rotate(14 2 -7.35)"/>
+    <ellipse cx="0.15" cy="-7.95" rx="0.72" ry="0.62"/>
+    <ellipse cx="-1.35" cy="-7.7" rx="0.62" ry="0.55"/>
+    <ellipse cx="-2.6" cy="-7.15" rx="0.55" ry="0.48"/>
+    <ellipse cx="-3.6" cy="-6.35" rx="0.46" ry="0.42"/>
+  </g>
+</svg>
