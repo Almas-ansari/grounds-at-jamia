@@ -6,7 +6,7 @@
  * a crowd of five or more collapses into a single marker that opens on tap.
  */
 import { memo, useMemo } from 'react';
-import { layoutBanners, type BannerAnchor } from '../../lib/labels';
+import { agoLabel, layoutBanners, type BannerAnchor } from '../../lib/labels';
 import type { TrailState } from '../../lib/trails';
 import type { Wanderer } from '../../store/live';
 import { project } from '../../lib/projection';
@@ -48,7 +48,9 @@ function NameBannersImpl({
         id: wanderer.userId,
         x: p.x,
         y: p.y,
-        label: wanderer.displayName,
+        label: wanderer.staleSince
+          ? `${wanderer.displayName} · ${agoLabel(Date.now() - wanderer.staleSince)}`
+          : wanderer.displayName,
         isSelf: wanderer.isSelf,
       });
     }

@@ -48,6 +48,8 @@ export function SettingsDrawer({ open, onClose, onVisibilityChange }: SettingsDr
     motionPreference,
     setSoundEnabled,
     setMotionPreference,
+    showLastSeen,
+    setShowLastSeen,
     updateProfile,
     signOut,
     deleteAccount,
@@ -261,6 +263,26 @@ export function SettingsDrawer({ open, onClose, onVisibilityChange }: SettingsDr
               className={`brass shrink-0 rounded-seal px-4 py-2.5 text-sm ${soundEnabled ? 'brass--pressed' : ''}`}
             >
               {soundEnabled ? 'On' : 'Off'}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="min-w-0">
+              <span className="hand block text-lg text-ink">Show where friends were last seen</span>
+              <span className="block text-sm text-ink-faded">
+                Keep a friend on the map for a few minutes after they go quiet, fading, with when
+                you last saw them. Someone who chooses ghost disappears at once either way.
+              </span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showLastSeen}
+              aria-label="Show where friends were last seen"
+              onClick={() => setShowLastSeen(!showLastSeen)}
+              className={`brass shrink-0 rounded-seal px-4 py-2.5 text-sm ${showLastSeen ? 'brass--pressed' : ''}`}
+            >
+              {showLastSeen ? 'On' : 'Off'}
             </button>
           </div>
 

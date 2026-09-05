@@ -13,6 +13,7 @@
 import { create } from 'zustand';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { useSessionStore } from './session';
 import {
   liveFixSchema,
   livePresenceSchema,
@@ -46,6 +47,22 @@ export interface Wanderer {
   readonly zoneId: string | null;
   readonly bearing: number | null;
   readonly updatedAt: number;
+  /**
+   * When their row lapsed, if it has. Null while they are live.
+   *
+   * A person can leave the map two very different ways, and conflating them
+   * loses real information. Going ghost, signing out or closing the tab sends a
+   * DELETE — a deliberate departure, and they are gone at once. Simply going
+   * quiet — a backgrounded tab, a lost signal, a phone in a pocket — sends
+   * nothing at all; the row just expires. That second case is worth showing as
+   * a fading "last seen", because a friend who was in the library four minutes
+   * ago is still useful to know about.
+   *
+   * Nothing is retained on the server for this. The row is deleted there on
+   * schedule exactly as before; this is the viewer's own screen keeping a
+   * decaying memory of something it was already entitled to be told.
+   */
+  readonly staleSince: number | null;
 }
 
 interface LiveState {
@@ -81,6 +98,10 @@ let fixRows = new Map<string, LiveFix>();
 let profiles = new Map<string, Profile>();
 let selfUserId: string | null = null;
 let pruneTimer: ReturnType<typeof setInterval> | null = null;
+/** When each lapsed row stopped being fresh. */
+const staleAt = new Map<string, number>();
+/** How long a quiet person keeps fading before the map forgets them. */
+const STALE_KEEP_MS = 5 * 60_000;
 
 function toWanderer(userId: string): Wanderer | null {
   const presence = presenceRows.get(userId);
@@ -103,6 +124,7 @@ function toWanderer(userId: string): Wanderer | null {
       zoneId: presence?.zone_id ?? null,
       bearing: fix.bearing,
       updatedAt: Date.parse(fix.updated_at),
+      staleSince: staleAt.get(userId) ?? null,
     };
   }
 
@@ -120,6 +142,7 @@ function toWanderer(userId: string): Wanderer | null {
     zoneId: presence.zone_id,
     bearing: null,
     updatedAt: Date.parse(presence.updated_at),
+    staleSince: staleAt.get(userId) ?? null,
   };
 }
 
@@ -270,7 +293,10 @@ export const useLiveStore = create<LiveState>((set, get) => ({
           void (async () => {
             if (payload.eventType === 'DELETE') {
               const id = (payload.old as { user_id?: string }).user_id;
-              if (id) presenceRows.delete(id);
+              if (id) {
+                presenceRows.delete(id);
+                staleAt.delete(id);
+              }
             } else {
               const parsed = safeRow(livePresenceSchema, payload.new, 'presence');
               if (parsed) {
@@ -286,7 +312,10 @@ export const useLiveStore = create<LiveState>((set, get) => ({
         void (async () => {
           if (payload.eventType === 'DELETE') {
             const id = (payload.old as { user_id?: string }).user_id;
-            if (id) fixRows.delete(id);
+            if (id) {
+              fixRows.delete(id);
+              staleAt.delete(id);
+            }
           } else {
             const parsed = safeRow(liveFixSchema, payload.new, 'fix');
             if (parsed) {
@@ -299,20 +328,41 @@ export const useLiveStore = create<LiveState>((set, get) => ({
       })
       .subscribe((status) => set({ connected: status === 'SUBSCRIBED' }));
 
-    // A row can also simply expire. Nothing pushes that, so sweep locally too:
-    // anything whose TTL has run out is dropped from view.
+    // Expiry pushes nothing — the row simply lapses — so it is swept locally.
+    // A lapse is not a departure: it is marked stale and left to fade, and only
+    // forgotten once it is old enough to be no use to anybody.
     pruneTimer = setInterval(() => {
-      const cutoff = Date.now();
+      const now = Date.now();
       let dirty = false;
+
+      // Off by default: without it a lapsed row is simply forgotten, which is
+      // how this behaved before and is the more private of the two.
+      const keepLastSeen = useSessionStore.getState().showLastSeen;
+
+      const lapsed = (id: string, expiresAt: string): boolean => {
+        if (Date.parse(expiresAt) > now) {
+          if (staleAt.delete(id)) dirty = true;
+          return false;
+        }
+        if (!keepLastSeen) return true;
+        if (!staleAt.has(id)) {
+          staleAt.set(id, now);
+          dirty = true;
+        }
+        return now - (staleAt.get(id) ?? now) > STALE_KEEP_MS;
+      };
+
       for (const [id, row] of presenceRows) {
-        if (Date.parse(row.expires_at) <= cutoff) {
+        if (lapsed(id, row.expires_at)) {
           presenceRows.delete(id);
+          staleAt.delete(id);
           dirty = true;
         }
       }
       for (const [id, row] of fixRows) {
-        if (Date.parse(row.expires_at) <= cutoff) {
+        if (lapsed(id, row.expires_at)) {
           fixRows.delete(id);
+          staleAt.delete(id);
           dirty = true;
         }
       }
@@ -332,6 +382,7 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     }
     selfUserId = null;
     motion.clear();
+    staleAt.clear();
     set({ wanderers: {}, trails: {}, connected: false });
   },
 }));

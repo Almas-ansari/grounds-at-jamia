@@ -65,7 +65,18 @@ function FootprintsImpl({ wanderers, trails, reducedMotion }: FootprintsProps): 
         const wanderer = wanderers[userId];
         if (!wanderer) return null;
         return (
-          <g key={userId} opacity={wanderer.precise ? 1 : 0.72}>
+          // A lapsed trail is a memory, not a sighting, so it is drawn faintly
+          // and fades further the longer it has been since they were seen.
+          <g
+            key={userId}
+            opacity={
+              wanderer.staleSince
+                ? Math.max(0.16, 0.5 - (Date.now() - wanderer.staleSince) / 900_000)
+                : wanderer.precise
+                  ? 1
+                  : 0.72
+            }
+          >
             {trail.prints.map((print) => (
               <PrintGlyph
                 key={print.id}

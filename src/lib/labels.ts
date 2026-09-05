@@ -58,6 +58,17 @@ const LEADER_LENGTH = 62;
 const MAX_PASSES = 48;
 const STEP = 11;
 
+/**
+ * How long ago, in as few characters as will fit on a ribbon. Minutes only:
+ * "last seen 4m ago" is the useful precision, and seconds would make a fading
+ * record look more exact than it is.
+ */
+export function agoLabel(sinceMs: number): string {
+  const minutes = Math.floor(sinceMs / 60_000);
+  if (minutes < 1) return 'just now';
+  return `${minutes}m ago`;
+}
+
 export function bannerWidth(label: string): number {
   return Math.max(72, label.length * CHAR_WIDTH + BANNER_PADDING);
 }

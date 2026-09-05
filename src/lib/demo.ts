@@ -114,6 +114,8 @@ export function createDemoFlock(count = 6): DemoFlock {
           zoneId: walker.target.id,
           bearing: walker.bearing,
           updatedAt: now,
+          // Invented people never lapse; they are always walking.
+          staleSince: null,
         } satisfies Wanderer;
       });
     },

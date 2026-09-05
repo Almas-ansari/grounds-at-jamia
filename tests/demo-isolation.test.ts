@@ -21,6 +21,7 @@ const wanderer = (id: string): Wanderer => ({
   zoneId: 'zakir-husain-library',
   bearing: 0,
   updatedAt: Date.now(),
+  staleSince: null,
 });
 
 describe('the demonstration flock', () => {

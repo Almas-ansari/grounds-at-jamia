@@ -18,6 +18,8 @@ interface SessionState {
   visibility: VisibilityMode;
   soundEnabled: boolean;
   motionPreference: MotionPreference;
+  /** Keep quiet friends on the map, fading, with when they were last seen. */
+  showLastSeen: boolean;
   /**
    * True when nobody is signed in — no project configured, or signed out.
    * Strictly about identity, not about whether the backend works: a signed-in
@@ -40,6 +42,7 @@ interface SessionState {
   setVisibility: (visibility: VisibilityMode) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setMotionPreference: (preference: MotionPreference) => void;
+  setShowLastSeen: (enabled: boolean) => void;
   updateProfile: (patch: {
     display_name?: string;
     faculty?: string | null;
@@ -50,6 +53,7 @@ interface SessionState {
 }
 
 const MOTION_KEY = 'mm.motion';
+const LAST_SEEN_KEY = 'mm.lastSeen';
 const SOUND_KEY = 'mm.sound';
 
 function readLocal<T extends string>(key: string, fallback: T): T {
@@ -140,6 +144,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   visibility: 'ghost',
   soundEnabled: readLocal<'on' | 'off'>(SOUND_KEY, 'off') === 'on',
   motionPreference: readLocal<MotionPreference>(MOTION_KEY, 'system'),
+  // Off by default. Showing where somebody was a few minutes ago is useful, but
+  // it is more than they agreed to when they put themselves on a live map, so
+  // it is the reader's choice to switch on rather than something done to them.
+  showLastSeen: readLocal<'on' | 'off'>(LAST_SEEN_KEY, 'off') === 'on',
   demo: true,
   schemaMissing: false,
   authError: initialAuthError,
@@ -209,6 +217,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (user && supabase) {
       void supabase.from('profiles').update({ sound_enabled: enabled }).eq('id', user.id);
     }
+  },
+
+  setShowLastSeen: (enabled) => {
+    writeLocal(LAST_SEEN_KEY, enabled ? 'on' : 'off');
+    set({ showLastSeen: enabled });
   },
 
   setMotionPreference: (preference) => {
