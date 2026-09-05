@@ -13,6 +13,10 @@ export const AUTHOR = {
   githubHandle: 'github.com/Almas-ansari',
   portfolio: 'https://almas-ansari-i2oeimx.gamma.site',
   portfolioLabel: 'almas-ansari-i2oeimx.gamma.site',
+  repo: 'https://github.com/Almas-ansari/grounds-at-jamia',
+  repoLabel: 'Almas-ansari/grounds-at-jamia',
+  /** Where OSM's own editor opens on the campus. */
+  osmEdit: 'https://www.openstreetmap.org/edit#map=17/28.5625/77.2815',
 } as const;
 
 export interface CollegeRequest {
@@ -47,6 +51,27 @@ export function draftMessage(request: CollegeRequest, origin: string): string {
 
   lines.push('', '—', `Sent from the map at ${origin}`);
   return lines.join('\n');
+}
+
+export interface BugReport {
+  readonly what: string;
+  readonly where: string;
+  readonly device: string;
+}
+
+export function bugMailtoLink(report: BugReport, origin: string): string {
+  const subject = encodeURIComponent('The Grounds — a bug');
+  const lines = [
+    `Hello ${AUTHOR.name.split(' ')[0]},`,
+    '',
+    'Something is wrong with the map:',
+    '',
+    report.what.trim() || '(what happened)',
+  ];
+  if (report.where.trim()) lines.push('', `Where: ${report.where.trim()}`);
+  if (report.device.trim()) lines.push(`Device / browser: ${report.device.trim()}`);
+  lines.push('', '—', `Reported from ${origin}`);
+  return `mailto:${AUTHOR.email}?subject=${subject}&body=${encodeURIComponent(lines.join('\n'))}`;
 }
 
 export function mailtoLink(request: CollegeRequest, origin: string): string {

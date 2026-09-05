@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import MapScreen from './screens/MapScreen';
 import CollegeRequestScreen from './screens/CollegeRequestScreen';
+import BugReportScreen from './screens/BugReportScreen';
 import { useSessionStore } from './store/session';
 
 export default function App(): JSX.Element {
@@ -31,6 +32,10 @@ export default function App(): JSX.Element {
           it drafts a note in the browser and hands it to the reader's own mail
           client, so it works for somebody who has never signed in. */}
       <Route path="/your-college" element={<CollegeRequestScreen />} />
+      {/* Where a reader can say something is wrong — and where the difference
+          between "this app is broken" and "OpenStreetMap is out of date" gets
+          explained, because the second has a much better fix than emailing. */}
+      <Route path="/report" element={<BugReportScreen />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

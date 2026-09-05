@@ -57,6 +57,9 @@ export function MakerCredit({ variant = 'full' }: MakerCreditProps): JSX.Element
         <Row label="Portfolio" href={AUTHOR.portfolio}>
           {AUTHOR.portfolioLabel}
         </Row>
+        <Row label="Source" href={AUTHOR.repo}>
+          {AUTHOR.repoLabel}
+        </Row>
       </ul>
     </section>
   );

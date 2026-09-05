@@ -267,7 +267,27 @@ export default function MapScreen(): JSX.Element {
       {/* --- notices ---------------------------------------------------- */}
       {/* Kept off the centre so the cartouche at the head of the sheet stays readable. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-2 p-3">
-        <PlaceSearch onChoose={showPlace} selectedZoneId={place?.id ?? null} />
+        <div className="pointer-events-none flex w-full max-w-sm items-start gap-2">
+          <PlaceSearch onChoose={showPlace} selectedZoneId={place?.id ?? null} />
+          <Link
+            to="/report"
+            title="Report a bug"
+            aria-label="Report a bug"
+            className="brass pointer-events-auto flex h-[46px] w-11 shrink-0 items-center justify-center rounded-seal no-underline"
+          >
+            {/* A bug, drawn rather than fetched, like everything else here. */}
+            <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+              <ellipse cx="12" cy="13.5" rx="4.6" ry="5.6" fill="none" stroke="currentColor" strokeWidth="1.7" />
+              <path
+                d="M12 7.9V6.2M9.4 6.1 8.2 4.7M14.6 6.1l1.2-1.4M7.4 11.2 4.5 10M7.2 14.4H4.2M7.6 17.6l-2.6 1.6M16.6 11.2l2.9-1.2M16.8 14.4h3M16.4 17.6l2.6 1.6M12 8.4v10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </Link>
+        </div>
         {demo && (
           <p className="sheet pointer-events-auto max-w-[17rem] rounded-seal px-3 py-1.5 text-xs text-ink">
             Demonstration: the campus is real, the wanderers are invented, and no one’s location is
