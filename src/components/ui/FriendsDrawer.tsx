@@ -165,11 +165,20 @@ export function FriendsDrawer({ open, selfId, onClose, onLocate }: FriendsDrawer
           </section>
 
           {/* --- requests waiting on you --------------------------------- */}
-          {incoming.length > 0 && (
-            <section>
-              <h3 className="hand text-lg text-ink">
-                Waiting on you <span className="text-ink-faded">({incoming.length})</span>
-              </h3>
+          {/* Always rendered, even when empty. A section that only appears once
+              somebody has written to you is a section nobody can find, and
+              "where are my friend requests" is then a fair question. */}
+          <section>
+            <h3 className="hand text-lg text-ink">
+              Friend requests{' '}
+              {incoming.length > 0 && <span className="text-ink-faded">({incoming.length})</span>}
+            </h3>
+            {incoming.length === 0 ? (
+              <p className="mt-1 text-sm text-ink-faded">
+                Nobody has asked to be your friend yet. When they do, they will appear here to
+                accept or decline.
+              </p>
+            ) : (
               <ul className="mt-1">
                 {incoming.map((edge) => (
                   <Person key={edge.other.id} profile={edge.other} subtitle={`@${edge.other.handle}`}>
@@ -190,8 +199,8 @@ export function FriendsDrawer({ open, selfId, onClose, onLocate }: FriendsDrawer
                   </Person>
                 ))}
               </ul>
-            </section>
-          )}
+            )}
+          </section>
 
           {/* --- your friends -------------------------------------------- */}
           <section>

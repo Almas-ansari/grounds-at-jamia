@@ -74,6 +74,55 @@ interface ProfileLookup {
   readonly schemaMissing: boolean;
 }
 
+/**
+ * Make a profile for somebody who has none.
+ *
+ * The `on_auth_user_created` trigger does this for every new sign-up, but it
+ * cannot help an account that already existed when the migration was applied —
+ * and an account with no profile row is a mostly-dead app: Settings renders
+ * nothing, the friend list cannot load, and nobody can find you by handle.
+ * So the client repairs it. RLS allows exactly this insert and no other:
+ * `profiles_insert_self` requires id = auth.uid().
+ */
+async function createMissingProfile(user: User): Promise<Profile | null> {
+  if (!supabase) return null;
+
+  const base =
+    (user.email ?? 'wanderer')
+      .split('@')[0]!
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '_')
+      .slice(0, 16) || 'wanderer';
+  const displayName =
+    (user.user_metadata?.['full_name'] as string | undefined) ??
+    (user.user_metadata?.['name'] as string | undefined) ??
+    (user.email ?? 'A Wanderer').split('@')[0]!;
+
+  // The handle is unique, so a collision is expected rather than exceptional.
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const handle = attempt === 0 ? base : `${base.slice(0, 15)}${attempt}`;
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        display_name: displayName.slice(0, 32) || 'A Wanderer',
+        handle: handle.length >= 3 ? handle : `${handle}ink`,
+      })
+      .select()
+      .maybeSingle();
+
+    if (!error && data) {
+      // Ghost, like every other new account. Nobody appears without saying so.
+      await supabase
+        .from('live_presence')
+        .upsert({ user_id: user.id, visibility: 'ghost' }, { onConflict: 'user_id' });
+      return safeRow(profileSchema, data, 'profile');
+    }
+    if (error?.code !== '23505') return null;
+  }
+  return null;
+}
+
 async function loadProfile(userId: string): Promise<ProfileLookup> {
   if (!supabase) return { profile: null, schemaMissing: false };
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
@@ -113,7 +162,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         set({ ready: true, user: null, profile: null, demo: true, visibility: 'ghost', schemaMissing: false });
         return;
       }
-      const { profile, schemaMissing } = await loadProfile(user.id);
+      const lookup = await loadProfile(user.id);
+      const schemaMissing = lookup.schemaMissing;
+      // Signed in, schema present, but no row: repair it rather than leaving a
+      // half-working app.
+      const profile = lookup.profile ?? (schemaMissing ? null : await createMissingProfile(user));
       // Read back the row rather than assuming: the account may have been
       // ghosted from another device.
       const { data: presence } = await supabase!
