@@ -2,6 +2,7 @@
  * The map screen. Everything meets here: the parchment, the live rows, the
  * publisher, and the brass strip along the bottom.
  */
+import { Link } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapCanvas, type MapCanvasHandle } from '../components/map/MapCanvas';
 import { MapBase, MapOverlay } from '../components/map/MapScene';
@@ -20,6 +21,7 @@ import { useFriendsStore } from '../store/friends';
 import { createDemoFlock } from '../lib/demo';
 import { playQuillScratch } from '../lib/audio';
 import { zoneName, type Zone } from '../data/zones';
+import { MakerCredit } from '../components/ui/MakerCredit';
 import type { VisibilityMode } from '../lib/schemas';
 import type { GeoError } from '../lib/geo';
 
@@ -372,7 +374,15 @@ export default function MapScreen(): JSX.Element {
             </button>
           </div>
 
-
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-ink/15 pt-2">
+            <Link
+              to="/your-college"
+              className="text-sm text-ember underline decoration-dotted underline-offset-4 hover:text-ink"
+            >
+              Want this for your college?
+            </Link>
+            <MakerCredit variant="compact" />
+          </div>
         </div>
       </div>
 
@@ -410,11 +420,18 @@ export default function MapScreen(): JSX.Element {
             your coordinates are readable by accepted friends and by nobody else, and that is
             enforced by the database, not by this app.
           </p>
-          {profile && (
-            <p className="text-ink-faded">
-              You are @{profile.handle} here.
-            </p>
-          )}
+          {profile && <p className="text-ink-faded">You are @{profile.handle} here.</p>}
+
+          <div className="border-t border-ink/20 pt-4">
+            <MakerCredit />
+            <Link
+              to="/your-college"
+              onClick={() => setDrawer('none')}
+              className="brass mt-3 inline-block rounded-seal px-4 py-2.5 text-base no-underline"
+            >
+              Bring this to your college
+            </Link>
+          </div>
         </div>
       </Drawer>
 

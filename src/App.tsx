@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import MapScreen from './screens/MapScreen';
+import CollegeRequestScreen from './screens/CollegeRequestScreen';
 import { useSessionStore } from './store/session';
 
 export default function App(): JSX.Element {
@@ -26,6 +27,10 @@ export default function App(): JSX.Element {
           button on the map itself, for the people who want the real thing. */}
       <Route path="/" element={<MapScreen />} />
       <Route path="/map" element={<MapScreen />} />
+      {/* Asking for the map to be drawn for another campus. No account needed:
+          it drafts a note in the browser and hands it to the reader's own mail
+          client, so it works for somebody who has never signed in. */}
+      <Route path="/your-college" element={<CollegeRequestScreen />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
