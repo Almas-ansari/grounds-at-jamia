@@ -210,7 +210,37 @@ the difference between smooth and unusable on a phone. Change the ramp in
 Attribution — **© OpenStreetMap contributors** — is shown on the map and in the
 About panel, and is required.
 
-### 5. Phantom wanderers
+### 5. The buildings OSM has not surveyed
+
+OpenStreetMap has 165 buildings on this campus and many real ones are simply
+missing, which is what makes the map look wrong in places. The gaps are filled
+from Microsoft's Global ML Building Footprints — machine-derived outlines under
+**ODbL, the same licence as OSM**:
+
+```bash
+npm run fetch:buildings
+```
+
+It streams the regional file (~125 MB, cached in `.tiles-raw/`), keeps the 619
+footprints that fall on campus, and drops the 79 that OpenStreetMap already
+knows about — tested three ways, since a machine footprint can be offset from
+the surveyed one or merge two neighbours into a blob, and in both cases its
+centre falls outside the OSM polygon while plainly being the same building.
+That leaves **540 genuinely new buildings**, committed as
+`src/data/ml-buildings.geojson`.
+
+They are drawn a shade fainter than the basemap's own, on purpose: a machine's
+guess at a footprint is not the same kind of fact as somebody having walked
+round the building with a GPS.
+
+**Why not trace a commercial map?** Because it would be a derivative work
+however few times you copied it, and it would make the result impossible to
+contribute back to OpenStreetMap — which bans tracing from such sources
+outright, and rightly.
+
+Attribution, required: **Building footprints © Microsoft, ODbL**.
+
+### 6. Phantom wanderers
 
 Developing a live map alone is difficult, so:
 
@@ -280,6 +310,7 @@ back to localhost.
 scripts/fetch-campus.ts     one-off Overpass fetch → src/data/campus.geojson
 scripts/fetch-tiles.ts      one-off basemap fetch  → .tiles-raw/
 scripts/wash-tiles.ts       bakes the parchment palette into the tiles
+scripts/fetch-buildings.ts  ML footprints for what OSM has not surveyed
 scripts/seed-phantoms.ts    six invented walkers, for solo development
 scripts/test-rls.sh         throwaway Postgres + pgTAP
 

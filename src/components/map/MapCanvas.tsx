@@ -152,7 +152,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
       keepBuffer: 1,
       className: 'mm-tiles',
       // Required by the tile source, and repeated in the About panel.
-      attribution: '© OpenStreetMap contributors',
+      attribution: '© OpenStreetMap contributors · footprints © Microsoft',
     });
 
     /**

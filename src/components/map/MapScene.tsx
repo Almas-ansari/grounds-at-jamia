@@ -22,6 +22,7 @@ import { MapFurniture } from './MapFurniture';
 import { Footprints } from './Footprints';
 import { NameBanners } from './NameBanners';
 import { EstateMask } from './EstateMask';
+import { MlBuildings } from './MlBuildings';
 import type { TrailState } from '../../lib/trails';
 import type { Wanderer } from '../../store/live';
 
@@ -81,6 +82,10 @@ function MapOverlayImpl({
           substrate, and it is applied in CSS on the map container — see
           `.mm-map--surveyed::before`. Tiling feTurbulence inside this overlay
           meant re-filtering it on every frame of every gesture. */}
+
+      {/* The buildings the basemap does not have. Drawn before the mask, so a
+          footprint that strays off the estate is covered like anything else. */}
+      {surveyed && <MlBuildings />}
 
       {/* Anything that is not Jamia is covered over before the map's own
           lettering goes down, so a masked street can never sit on top of a
