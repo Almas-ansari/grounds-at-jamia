@@ -17,6 +17,8 @@ interface MapControlsProps {
   readonly locateLabel: string;
   readonly style: BasemapStyle;
   readonly onToggleStyle: () => void;
+  /** The strip is folded away, so the column can drop nearer the bottom. */
+  readonly stripOpen: boolean;
 }
 
 export function MapControls({
@@ -29,9 +31,12 @@ export function MapControls({
   locateLabel,
   style,
   onToggleStyle,
+  stripOpen,
 }: MapControlsProps): JSX.Element {
   return (
-    <div className="pointer-events-none absolute bottom-[11.5rem] right-3 z-20 flex flex-col items-end gap-1.5 sm:bottom-[9.5rem]">
+    <div className={`pointer-events-none absolute right-3 z-20 flex flex-col items-end gap-1.5 ${
+      stripOpen ? 'bottom-[16.25rem] sm:bottom-[14.5rem]' : 'bottom-16'
+    }`}>
       <div className="pointer-events-auto flex flex-col overflow-hidden rounded-seal border border-ink/40">
         <button
           type="button"

@@ -11,7 +11,8 @@ import { Drawer } from '../components/ui/Drawer';
 import { FriendsDrawer } from '../components/ui/FriendsDrawer';
 import { SettingsDrawer } from '../components/ui/SettingsDrawer';
 import { SignInDrawer } from '../components/ui/SignInDrawer';
-import { VisibilityControl, describeVisibility } from '../components/ui/VisibilityControl';
+import { describeVisibility } from '../components/ui/VisibilityControl';
+import { AudienceFilter, type Audience } from '../components/ui/AudienceFilter';
 import { MapControls } from '../components/ui/MapControls';
 import { KIND_LABEL, PlaceSearch } from '../components/ui/PlaceSearch';
 import { useSessionStore, useReducedMotion } from '../store/session';
@@ -86,6 +87,27 @@ export default function MapScreen(): JSX.Element {
   const [cluster, setCluster] = useState<string | null>(null);
   // Synced once per gesture, never per frame.
   const [zoom, setZoom] = useState(1.6);
+  // A view filter, not a privacy control: everything it can show was already
+  // sent because the reader was entitled to it. Persisted because it is a
+  // preference about looking, not about who may look at you.
+  // The strip can be folded away, leaving only the seal. Somebody who came to
+  // look at the map should be able to look at the map.
+  const [stripOpen, setStripOpen] = useState(true);
+  const [audience, setAudienceState] = useState<Audience>(() => {
+    try {
+      return localStorage.getItem('mm.audience') === 'friends' ? 'friends' : 'everyone';
+    } catch {
+      return 'everyone';
+    }
+  });
+  const setAudience = useCallback((next: Audience) => {
+    setAudienceState(next);
+    try {
+      localStorage.setItem('mm.audience', next);
+    } catch {
+      /* private browsing; the choice simply does not persist */
+    }
+  }, []);
   const [place, setPlace] = useState<Zone | null>(null);
   const [zoomLimits, setZoomLimits] = useState({ in: true, out: true });
   const [style, setStyle] = useState<BasemapStyle>('surveyed');
@@ -183,7 +205,27 @@ export default function MapScreen(): JSX.Element {
     else canvas.current?.reset();
   }, [geo.fix, user, wanderers]);
 
-  const visibleCount = Object.keys(wanderers).length;
+  const friendIds = useMemo(
+    () => new Set(friendEdges.filter((e) => e.status === 'accepted').map((e) => e.other.id)),
+    [friendEdges],
+  );
+
+  /** What the map actually draws, after the reader's own filter. */
+  const shown = useMemo(() => {
+    if (audience === 'everyone') return wanderers;
+    const kept: Record<string, (typeof wanderers)[string]> = {};
+    for (const [id, w] of Object.entries(wanderers)) {
+      if (w.isSelf || friendIds.has(id)) kept[id] = w;
+    }
+    return kept;
+  }, [audience, wanderers, friendIds]);
+
+  const everyoneCount = Object.keys(wanderers).length;
+  const friendsCount = useMemo(
+    () => Object.values(wanderers).filter((w) => w.isSelf || friendIds.has(w.userId)).length,
+    [wanderers, friendIds],
+  );
+  const visibleCount = Object.keys(shown).length;
   const marginNote = useMemo(() => {
     if (visibleCount > 0) return null;
     return 'No one is abroad on the grounds tonight.';
@@ -204,7 +246,7 @@ export default function MapScreen(): JSX.Element {
         base={<MapBase marginNote={marginNote} />}
         overlay={
           <MapOverlay
-            wanderers={wanderers}
+            wanderers={shown}
             trails={trails}
             highlightZoneId={litZoneId}
             marginNote={marginNote}
@@ -282,6 +324,7 @@ export default function MapScreen(): JSX.Element {
       </div>
 
       <MapControls
+        stripOpen={stripOpen}
         onZoomIn={() => canvas.current?.zoomBy(0.8)}
         onZoomOut={() => canvas.current?.zoomBy(-0.8)}
         onRecentre={recentre}
@@ -304,9 +347,9 @@ export default function MapScreen(): JSX.Element {
                 {KIND_LABEL[place.kind]}
                 {place.approximate && ' · outline drawn by hand, not surveyed'}
               </p>
-              {Object.values(wanderers).some((w) => w.zoneId === place.id) && (
+              {Object.values(shown).some((w) => w.zoneId === place.id) && (
                 <p className="mt-1 text-sm text-ink">
-                  {Object.values(wanderers)
+                  {Object.values(shown)
                     .filter((w) => w.zoneId === place.id)
                     .map((w) => w.displayName)
                     .join(', ')}{' '}
@@ -328,15 +371,54 @@ export default function MapScreen(): JSX.Element {
 
       {/* --- the instrument strip --------------------------------------- */}
       <div className="absolute inset-x-0 bottom-0 z-30 p-3">
-        <div className="sheet relative mx-auto max-w-lg rounded-xl px-3 pb-2.5 pt-4">
-          {/* The wax seal that fastens the strip to the sheet. */}
-          <span
-            aria-hidden="true"
-            className="wax-seal absolute -top-3.5 left-1/2 h-8 w-8 -translate-x-1/2 rounded-full"
-          />
+        <div className={`relative mx-auto max-w-lg ${stripOpen ? '' : 'h-9'}`}>
+          {/* The seal both fastens the strip down and lifts it away again. It
+              is the only thing left on screen when the strip is folded, so it
+              has to read as a handle rather than as decoration. */}
+          <button
+            type="button"
+            onClick={() => setStripOpen((v) => !v)}
+            aria-expanded={stripOpen}
+            aria-controls="mm-strip"
+            aria-label={stripOpen ? 'Hide the controls' : 'Show the controls'}
+            title={stripOpen ? 'Hide the controls' : 'Show the controls'}
+            className={`wax-seal absolute left-1/2 z-10 h-9 w-9 -translate-x-1/2 rounded-full ${stripOpen ? '-top-4' : 'bottom-0'}`}
+          >
+            <span aria-hidden="true" className="block text-sm leading-none text-parchment">
+              {stripOpen ? '▾' : '▴'}
+            </span>
+          </button>
+
+          <div
+            id="mm-strip"
+            hidden={!stripOpen}
+            className="sheet rounded-xl px-3 pb-2.5 pt-4"
+          >
 
           {user ? (
-            <VisibilityControl value={visibility} friendCount={friendCount} onChange={onVisibilityChange} />
+            <>
+              {/* Who can see *you* lives in Settings, but never being told is
+                  worse than the extra tap: the status stays here, and it is the
+                  way in. */}
+              <button
+                type="button"
+                onClick={() => setDrawer('settings')}
+                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-seal px-2 py-1 text-sm text-ink-faded hover:text-ink"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`inline-block h-2 w-2 rounded-full ${visibility === 'ghost' ? 'bg-ink/35' : 'bg-ember'}`}
+                />
+                {describeVisibility(visibility, friendCount)}
+                <span className="underline decoration-dotted underline-offset-2">Change</span>
+              </button>
+              <AudienceFilter
+                value={audience}
+                onChange={setAudience}
+                friendsShown={friendsCount}
+                everyoneShown={everyoneCount}
+              />
+            </>
           ) : (
             <button
               type="button"
@@ -374,14 +456,15 @@ export default function MapScreen(): JSX.Element {
             </button>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-ink/15 pt-2">
-            <Link
-              to="/your-college"
-              className="text-sm text-ember underline decoration-dotted underline-offset-4 hover:text-ink"
-            >
-              Want this for your college?
-            </Link>
-            <MakerCredit variant="compact" />
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-ink/15 pt-2">
+              <Link
+                to="/your-college"
+                className="text-sm text-ember underline decoration-dotted underline-offset-4 hover:text-ink"
+              >
+                Want this for your college?
+              </Link>
+              <MakerCredit variant="compact" />
+            </div>
           </div>
         </div>
       </div>
@@ -440,7 +523,7 @@ export default function MapScreen(): JSX.Element {
         {visibleCount === 0
           ? 'No one is on the map.'
           : `${visibleCount} ${visibleCount === 1 ? 'person is' : 'people are'} on the map: ${Object.values(
-              wanderers,
+              shown,
             )
               .map((w) => `${w.displayName}${w.zoneId ? ` near ${zoneName(w.zoneId) ?? 'the grounds'}` : ''}`)
               .join(', ')}.`}

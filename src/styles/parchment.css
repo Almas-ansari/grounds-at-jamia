@@ -143,7 +143,7 @@
    wax seal that sits proud of its top edge. */
 .mm-map .leaflet-bottom.leaflet-left,
 .mm-map .leaflet-bottom.leaflet-right {
-  bottom: 10.75rem;
+  bottom: 16.25rem;
 }
 
 .mm-map .leaflet-bottom.leaflet-right {
@@ -155,8 +155,14 @@
 @media (max-height: 720px) {
   .mm-map .leaflet-bottom.leaflet-left,
   .mm-map .leaflet-bottom.leaflet-right {
-    bottom: 11.5rem;
+    bottom: 16.75rem;
   }
+}
+
+/* Strip folded away: the scale bar and the credit can come back down. */
+.mm-strip-folded .leaflet-bottom.leaflet-left,
+.mm-strip-folded .leaflet-bottom.leaflet-right {
+  bottom: 4.25rem;
 }
 
 .mm-map .leaflet-control-attribution {

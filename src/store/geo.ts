@@ -51,6 +51,19 @@ let currentVisibility: VisibilityMode = 'ghost';
 let currentUserId: string | null = null;
 let unloadHandlers: (() => void) | null = null;
 
+/** The slice of the Wake Lock API this needs, without pulling in lib.dom's. */
+interface WakeLockSentinelLike {
+  release: () => Promise<void>;
+}
+let wakeLock: WakeLockSentinelLike | null = null;
+
+/**
+ * A fix older than this is no longer worth publishing. Long enough to ride out
+ * a browser throttling a background tab, short enough that nobody is shown
+ * somewhere they have already left.
+ */
+const STALE_FIX_MS = 75_000;
+
 /**
  * Clear both rows on the way out of the page. `fetch(..., { keepalive: true })`
  * is the one request that reliably survives a backgrounded mobile tab, and
@@ -132,8 +145,22 @@ export const useGeoStore = create<GeoStoreState>((set, get) => ({
       onError: (error) => set({ error }),
     });
 
-    const handleHide = (): void => {
-      if (document.visibilityState !== 'hidden') return;
+    /**
+     * Stay on the map until the tab is actually closed.
+     *
+     * Backgrounding used to clear the rows on `visibilitychange`, which meant
+     * glancing at a message took you off everyone's map. Now only a real
+     * departure — `pagehide`, which fires on close, reload and navigation —
+     * clears them.
+     *
+     * The honesty catch: a backgrounded tab often stops receiving fixes at all,
+     * especially on mobile. Heartbeating through that would keep a row alive
+     * that says somebody is somewhere they may have left ten minutes ago. So
+     * `publish` refuses to heartbeat a stale fix, and the 90 s TTL retires the
+     * row instead. Being absent from the map is a smaller lie than being in the
+     * wrong place on it.
+     */
+    const handlePageHide = (): void => {
       const id = currentUserId;
       if (!id || !supabase) return;
       void supabase.auth.getSession().then(({ data }) => {
@@ -141,12 +168,37 @@ export const useGeoStore = create<GeoStoreState>((set, get) => ({
         if (token) clearRowsBeacon(id, token);
       });
     };
-    const handlePageHide = handleHide;
-    document.addEventListener('visibilitychange', handleHide);
     window.addEventListener('pagehide', handlePageHide);
+
+    /**
+     * Ask the screen to stay awake while sharing. A locked screen suspends the
+     * page and with it the position watch, so this is the one lever a web app
+     * has to keep itself running. Best effort: it needs a secure context, the
+     * browser may refuse it, and it is released automatically when the tab is
+     * hidden — hence the re-acquire below.
+     */
+    const requestWakeLock = async (): Promise<void> => {
+      try {
+        const nav = navigator as Navigator & {
+          wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> };
+        };
+        if (!nav.wakeLock || document.visibilityState !== 'visible') return;
+        wakeLock = await nav.wakeLock.request('screen');
+      } catch {
+        // Refused, unsupported, or the battery is low. Not worth reporting.
+      }
+    };
+    const onVisible = (): void => {
+      if (document.visibilityState === 'visible') void requestWakeLock();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    void requestWakeLock();
+
     unloadHandlers = () => {
-      document.removeEventListener('visibilitychange', handleHide);
       window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', onVisible);
+      void wakeLock?.release().catch(() => undefined);
+      wakeLock = null;
     };
 
     set({ watching: true });
@@ -169,6 +221,11 @@ async function publish(
   get: () => GeoStoreState,
 ): Promise<void> {
   if (!supabase || !currentUserId || currentVisibility === 'ghost') return;
+
+  // A heartbeat exists to stop the TTL retiring somebody who is still there.
+  // If the last fix is old — a throttled background tab, a lost signal — then
+  // we no longer know that they are, and the row should be allowed to expire.
+  if (Date.now() - fix.timestamp > STALE_FIX_MS) return;
 
   const zoneId = offCampus ? OFF_CAMPUS_ZONE_ID : (zone?.id ?? null);
   const candidate: PublishState = { point: fix, zoneId, at: fix.timestamp };
