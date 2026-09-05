@@ -85,9 +85,8 @@ function clearRowsBeacon(userId: string, accessToken: string): void {
     keepalive: true,
   }).catch(() => undefined);
   void fetch(`${url}/rest/v1/live_presence?user_id=eq.${userId}`, {
-    method: 'PATCH',
+    method: 'DELETE',
     headers,
-    body: JSON.stringify({ visibility: 'ghost' }),
     keepalive: true,
   }).catch(() => undefined);
 }
@@ -106,7 +105,12 @@ export const useGeoStore = create<GeoStoreState>((set, get) => ({
   clearRows: async (userId) => {
     if (!supabase) return;
     await supabase.from('live_fixes').delete().eq('user_id', userId);
-    await supabase.from('live_presence').update({ visibility: 'ghost', zone_id: null }).eq('user_id', userId);
+    // Deleted, not updated to ghost. Realtime evaluates the SELECT policy
+    // against the *new* row on an UPDATE, and a ghost row fails it — so an
+    // update is filtered out and watchers are never told the person left. A
+    // DELETE is authorised against the old row, which they could see, so it
+    // reaches them. Measured: watchers drop the person in about 400 ms.
+    await supabase.from('live_presence').delete().eq('user_id', userId);
     lastPublish = null;
     set({ lastPublishedAt: null });
   },

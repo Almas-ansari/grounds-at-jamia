@@ -90,7 +90,11 @@ function MapOverlayImpl({
           zone label. */}
       <EstateMask />
 
-      <ZoneLabels highlightZoneId={highlightZoneId} zoom={zoom} onSelect={onSelectZone} quiet={surveyed} />
+      {/* Lettered over the surveyed basemap too. The tiles carry a handful of
+          OSM names baked in at fixed zooms, which is nothing like enough — most
+          of the faculties are unnamed there, and nothing about which name shows
+          at which scale is ours to decide. These are. */}
+      <ZoneLabels highlightZoneId={highlightZoneId} zoom={zoom} onSelect={onSelectZone} />
 
       {/* The empty-state marginalia belongs to the map's voice, so over the
           surveyed basemap it comes with the overlay rather than the sheet. */}
@@ -112,6 +116,7 @@ function MapOverlayImpl({
       <NameBanners
         wanderers={wanderers}
         trails={trails}
+        zoom={zoom}
         expandedClusterId={expandedClusterId}
         onToggleCluster={onToggleCluster}
       />

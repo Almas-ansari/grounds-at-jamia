@@ -10,10 +10,13 @@ import { layoutBanners, type BannerAnchor } from '../../lib/labels';
 import type { TrailState } from '../../lib/trails';
 import type { Wanderer } from '../../store/live';
 import { project } from '../../lib/projection';
+import { footScaleFor } from '../../lib/viewport';
 
 interface NameBannersProps {
   readonly wanderers: Record<string, Wanderer>;
   readonly trails: Record<string, TrailState>;
+  /** So the ribbons shrink as the map grows, instead of becoming billboards. */
+  readonly zoom: number;
   readonly expandedClusterId: string | null;
   readonly onToggleCluster: (id: string | null) => void;
 }
@@ -29,6 +32,7 @@ function leaderPath(fromX: number, fromY: number, toX: number, toY: number): str
 function NameBannersImpl({
   wanderers,
   trails,
+  zoom,
   expandedClusterId,
   onToggleCluster,
 }: NameBannersProps): JSX.Element {
@@ -53,10 +57,19 @@ function NameBannersImpl({
 
   const expanded = layout.clusters.find((c) => c.id === expandedClusterId) ?? null;
 
+  // Ribbons are laid out in map units, so without this they grow with the map
+  // and a close view is three billboards. Scaling each about its own anchor
+  // keeps it tied to the feet it belongs to while it shrinks.
+  const scale = footScaleFor(zoom) / footScaleFor(1);
+
   return (
     <g className="mm-layer mm-layer--banners">
       {layout.banners.map((banner) => (
-        <g key={banner.id} className="mm-banner">
+        <g
+          key={banner.id}
+          className="mm-banner"
+          transform={`translate(${banner.anchorX.toFixed(1)} ${banner.anchorY.toFixed(1)}) scale(${scale.toFixed(3)}) translate(${(-banner.anchorX).toFixed(1)} ${(-banner.anchorY).toFixed(1)})`}
+        >
           <path
             d={leaderPath(banner.anchorX, banner.anchorY, banner.x, banner.y + banner.height / 2)}
             fill="none"
@@ -91,7 +104,11 @@ function NameBannersImpl({
       ))}
 
       {layout.clusters.map((clusterMarker) => (
-        <g key={clusterMarker.id} className="mm-cluster">
+        <g
+          key={clusterMarker.id}
+          className="mm-cluster"
+          transform={`translate(${clusterMarker.x.toFixed(1)} ${clusterMarker.y.toFixed(1)}) scale(${scale.toFixed(3)}) translate(${(-clusterMarker.x).toFixed(1)} ${(-clusterMarker.y).toFixed(1)})`}
+        >
           <g
             role="button"
             tabIndex={0}

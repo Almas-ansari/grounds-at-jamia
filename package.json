@@ -20,7 +20,8 @@
     "wash:tiles": "tsx scripts/wash-tiles.ts",
     "doctor": "tsx scripts/doctor.ts",
     "db:apply": "./scripts/apply-migrations.sh",
-    "verify:live": "tsx scripts/verify-live.ts"
+    "verify:live": "tsx scripts/verify-live.ts",
+    "verify:realtime": "tsx scripts/verify-realtime.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",

@@ -9,6 +9,8 @@ import { memo } from 'react';
 import { campusCore } from '../../data/campus';
 import { pathFromCoordinates, project } from '../../lib/projection';
 import { zones, type Zone } from '../../data/zones';
+import osmNames from '../../data/osm-names.json';
+import { distanceMetres } from '../../lib/projection';
 
 /** Break a name into at most three lines of roughly even length. */
 function wrap(name: string, target = 15): string[] {
@@ -44,7 +46,7 @@ interface Placed {
  * are laid down in order of importance and anything that would collide with
  * ink already on the page is nudged, and dropped if it still will not fit.
  */
-function placeLabels(): Placed[] {
+function placeLabels(sizeScale: number): Placed[] {
   const boxes: { x: number; y: number; w: number; h: number }[] = [];
   const placed: Placed[] = [];
 
@@ -55,13 +57,15 @@ function placeLabels(): Placed[] {
 
   const hits = (x: number, y: number, w: number, h: number): boolean =>
     boxes.some(
-      (b) => Math.abs(b.x - x) * 2 < b.w + w + 10 && Math.abs(b.y - y) * 2 < b.h + h + 8,
+      (b) =>
+        Math.abs(b.x - x) * 2 < b.w + w + 10 * sizeScale &&
+        Math.abs(b.y - y) * 2 < b.h + h + 8 * sizeScale,
     );
 
   for (const zone of ordered) {
     const p = project(zone.centroid.lat, zone.centroid.lng);
     const lines = wrap(zone.name);
-    const size = LABEL_SIZE[zone.importance];
+    const size = LABEL_SIZE[zone.importance] * sizeScale;
     const w = Math.max(...lines.map((l) => l.length)) * size * CHAR_WIDTH;
     const h = lines.length * size * 1.05;
 
@@ -85,31 +89,77 @@ function placeLabels(): Placed[] {
   return placed;
 }
 
-const PLACED = placeLabels();
+/**
+ * Placement depends on how far in the map is zoomed, so it cannot be computed
+ * once. Lettering is drawn in map units and shrinks as you go closer, which
+ * means fewer collisions and room for more names — which is the whole point of
+ * zooming into a map. Cached per half-step of zoom so a pinch does not
+ * re-run the layout on every frame.
+ */
+const PLACEMENT_CACHE = new Map<number, Placed[]>();
+
+function labelScaleFor(zoom: number): number {
+  return 1 / Math.pow(Math.max(1, zoom), 0.62);
+}
+
+function placementFor(zoom: number): Placed[] {
+  const bucket = Math.min(6, Math.max(1, Math.round(zoom * 2) / 2));
+  const cached = PLACEMENT_CACHE.get(bucket);
+  if (cached) return cached;
+  const placed = placeLabels(labelScaleFor(bucket));
+  PLACEMENT_CACHE.set(bucket, placed);
+  return placed;
+}
 
 /**
  * How far in the map has to be zoomed before a label is worth the ink.
- * Faculties and the library carry the map at every scale; gates and grounds
- * only earn their place once you are close enough to walk to them.
+ * Faculties and the library carry the map at every scale; gates and lesser
+ * grounds only earn their place once you are close enough to walk to them.
  */
-const REVEAL_AT: Record<Zone['importance'], number> = { 3: 0, 2: 1.25, 1: 1.9 };
+const REVEAL_AT: Record<Zone['importance'], number> = { 3: 0, 2: 1.05, 1: 1.75 };
+
+/**
+ * Zones the basemap already letters itself.
+ *
+ * The tiles carry OSM's own names, and they start appearing around this scale.
+ * Drawing ours on top of theirs gives "Zakir Hussain Library" twice in two
+ * different hands, which is worse than either alone — so past this zoom we
+ * stand down for the places OSM knows, and keep lettering the ones it does not.
+ * That is most of the faculties.
+ */
+const TILES_LETTER_FROM = 1.5;
+const SAME_PLACE_M = 70;
+
+const LETTERED_BY_TILES = new Set(
+  zones
+    .filter((zone) =>
+      (osmNames as readonly { name: string; lat: number; lng: number }[]).some((n) => {
+        if (distanceMetres(zone.centroid, n) > SAME_PLACE_M) return false;
+        const a = zone.name.toLowerCase().replace(/[^a-z]/g, '');
+        const b = n.name.toLowerCase().replace(/[^a-z]/g, '');
+        // A loose match: OSM writes "Zakir Hussain Library (JMI)" where this
+        // map writes "Dr. Zakir Husain Library".
+        return a.includes(b.slice(0, 8)) || b.includes(a.slice(0, 8));
+      }),
+    )
+    .map((zone) => zone.id),
+);
 
 function ZoneLabelsImpl({
   highlightZoneId,
   zoom,
   onSelect,
-  /** The surveyed basemap letters the campus itself, so this layer stands down. */
-  quiet = false,
 }: {
   highlightZoneId?: string | null;
   zoom: number;
   onSelect?: (zone: Zone) => void;
-  quiet?: boolean;
 }): JSX.Element {
+  const placement = placementFor(zoom);
+
   return (
     <g className="mm-layer mm-layer--labels" aria-hidden="true">
       {/* The estate boundary: a heavier, wetter line than anything else. */}
-      {!quiet && campusCore && campusCore.geometry.type === 'Polygon' && campusCore.geometry.coordinates[0] && (
+      {campusCore && campusCore.geometry.type === 'Polygon' && campusCore.geometry.coordinates[0] && (
         <path
           d={pathFromCoordinates(campusCore.geometry.coordinates[0], true)}
           fill="none"
@@ -124,13 +174,14 @@ function ZoneLabelsImpl({
       )}
 
       <g filter="url(#mm-quill-fine)">
-        {PLACED.map(({ zone, x, y, lines, size }) => {
+        {placement.map(({ zone, x, y, lines, size }) => {
           const active = highlightZoneId === zone.id;
-          // Over the surveyed basemap the place names are already there, in
-          // OSM's own hand. Lettering them a second time is clutter, so only
-          // the place the reader has actually asked about is named.
-          if (!active && quiet) return null;
           if (!active && zoom < REVEAL_AT[zone.importance]) return null;
+          // Past this scale the basemap letters its own places, in OSM's hand.
+          // Lettering them again gives the same library two names in two
+          // different scripts, so ours stands down for the places OSM knows and
+          // keeps naming the ones it does not — which is most of the faculties.
+          if (!active && zoom >= TILES_LETTER_FROM && LETTERED_BY_TILES.has(zone.id)) return null;
           const dy0 = -((lines.length - 1) * size * 0.56);
           return (
             <g

@@ -242,7 +242,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const { user } = get();
     if (user) {
       await supabase.from('live_fixes').delete().eq('user_id', user.id);
-      await supabase.from('live_presence').update({ visibility: 'ghost' }).eq('user_id', user.id);
+      // Deleted rather than set to ghost, so watchers are pushed a DELETE and
+      // drop you at once. An update to ghost is invisible to them by policy.
+      await supabase.from('live_presence').delete().eq('user_id', user.id);
     }
     await supabase.auth.signOut();
     set({ user: null, profile: null, demo: true, visibility: 'ghost', schemaMissing: false });

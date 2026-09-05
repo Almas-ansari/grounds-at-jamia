@@ -92,8 +92,12 @@ const fitZoom = (map: L.Map): number => map.getBoundsZoom(ESTATE);
  */
 const relativeScale = (map: L.Map): number => Math.pow(2, map.getZoom() - fitZoom(map));
 
-/** How far in the map opens: close enough to read, with room to pull back. */
-const OPENING_STEPS = 0.55;
+/**
+ * How far in the map opens, in doublings of the whole-estate view. High enough
+ * that the faculties are labelled the moment it loads, rather than presenting a
+ * pale diagram somebody has to zoom into before it means anything.
+ */
+const OPENING_STEPS = 0.95;
 
 export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function MapCanvas(
   { base, overlay, style, opening, reducedMotion, onZoomChange, label },
