@@ -253,7 +253,6 @@ export default function MapScreen(): JSX.Element {
             reducedMotion={reducedMotion}
             expandedClusterId={cluster}
             onToggleCluster={setCluster}
-            onSelectZone={showPlace}
             opening={opening}
             zoom={zoom}
             surveyed={style === 'surveyed'}

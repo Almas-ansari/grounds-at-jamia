@@ -24,7 +24,6 @@ import { NameBanners } from './NameBanners';
 import { EstateMask } from './EstateMask';
 import type { TrailState } from '../../lib/trails';
 import type { Wanderer } from '../../store/live';
-import type { Zone } from '../../data/zones';
 
 /** The panels that peel back during the opening sequence. */
 const PANELS = [
@@ -57,7 +56,6 @@ interface MapOverlayProps {
   readonly reducedMotion: boolean;
   readonly expandedClusterId: string | null;
   readonly onToggleCluster: (id: string | null) => void;
-  readonly onSelectZone: (zone: Zone) => void;
   readonly opening: boolean;
   readonly zoom: number;
   readonly surveyed: boolean;
@@ -71,7 +69,6 @@ function MapOverlayImpl({
   reducedMotion,
   expandedClusterId,
   onToggleCluster,
-  onSelectZone,
   opening,
   zoom,
   surveyed,
@@ -90,11 +87,11 @@ function MapOverlayImpl({
           zone label. */}
       <EstateMask />
 
-      {/* Lettered over the surveyed basemap too. The tiles carry a handful of
-          OSM names baked in at fixed zooms, which is nothing like enough — most
-          of the faculties are unnamed there, and nothing about which name shows
-          at which scale is ours to decide. These are. */}
-      <ZoneLabels highlightZoneId={highlightZoneId} zoom={zoom} onSelect={onSelectZone} />
+      {/* The names on this map are OpenStreetMap's, carried by the tiles. This
+          layer draws only the boundary and whatever place the reader searched
+          for — lettering the zones a second time gave every building two names
+          in two different hands. */}
+      <ZoneLabels highlightZoneId={highlightZoneId} zoom={zoom} />
 
       {/* The empty-state marginalia belongs to the map's voice, so over the
           surveyed basemap it comes with the overlay rather than the sheet. */}
