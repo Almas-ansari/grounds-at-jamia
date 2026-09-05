@@ -21,6 +21,16 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 export const isConfigured = Boolean(url && anonKey && !url.includes('your-project-ref'));
 
+/**
+ * Whether to offer the email magic-link route.
+ *
+ * Off unless asked for, because a project set up for Google only has the Email
+ * provider disabled, and an always-visible button that always errors is worse
+ * than no button. Turn it on with VITE_ENABLE_EMAIL_SIGNIN=true once the
+ * provider is enabled in Supabase.
+ */
+export const emailSignInEnabled = import.meta.env.VITE_ENABLE_EMAIL_SIGNIN === 'true';
+
 export const supabase: SupabaseClient | null = isConfigured
   ? createClient(url!, anonKey!, {
       auth: {

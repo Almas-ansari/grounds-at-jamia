@@ -7,7 +7,7 @@
  */
 import { useState, type FormEvent } from 'react';
 import { Drawer } from './Drawer';
-import { isConfigured, supabase } from '../../lib/supabase';
+import { emailSignInEnabled, isConfigured, supabase } from '../../lib/supabase';
 
 interface SignInDrawerProps {
   readonly open: boolean;
@@ -104,12 +104,15 @@ export function SignInDrawer({ open, onClose }: SignInDrawerProps): JSX.Element 
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-3 text-sm text-ink-faded">
-            <span className="h-px flex-1 bg-ink/25" />
-            or
-            <span className="h-px flex-1 bg-ink/25" />
-          </div>
+          {emailSignInEnabled && (
+            <div className="flex items-center gap-3 text-sm text-ink-faded">
+              <span className="h-px flex-1 bg-ink/25" />
+              or
+              <span className="h-px flex-1 bg-ink/25" />
+            </div>
+          )}
 
+          {emailSignInEnabled && (
           <form onSubmit={(e) => void withEmail(e)} className="flex flex-col gap-2">
             <label htmlFor="signin-email" className="hand text-lg text-ink">
               Sign in by email
@@ -129,6 +132,7 @@ export function SignInDrawer({ open, onClose }: SignInDrawerProps): JSX.Element 
               </button>
             </div>
           </form>
+          )}
 
           {error && (
             <p role="alert" className="text-sm text-ember">
