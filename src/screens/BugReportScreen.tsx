@@ -159,30 +159,33 @@ export default function BugReportScreen(): JSX.Element {
 
         {/* --- for anybody who would rather just fix it -------------------- */}
         <section className="sheet rounded-xl px-5 py-5">
-          <h2 className="hand text-xl text-ink">Developer? Fix it yourself</h2>
+          <h2 className="hand text-xl text-ink">Developer? Come and have a look</h2>
           <p className="mt-2 text-base text-ink">
-            The whole thing is open — the map rendering, the privacy model, the migrations and the
-            tests. Fork it, fix it, send a pull request. Issues are welcome too if you would rather
-            just describe the problem.
+            The whole thing is open, and there is more in it than a map. The parchment, the ink
+            strokes, the torn edge and the foot glyphs are all generated as SVG in code — no image
+            files anywhere. The campus geometry is pulled from OpenStreetMap once at build time, and
+            the basemap tiles are recoloured by rewriting their palettes, so the app ships its own
+            map and never calls a tile server.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <a
-              href={AUTHOR.repo}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="brass rounded-seal px-4 py-2.5 text-base no-underline"
-            >
-              The source on GitHub
-            </a>
-            <a
-              href={`${AUTHOR.repo}/issues/new`}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="brass rounded-seal px-4 py-2.5 text-base no-underline"
-            >
-              Open an issue
-            </a>
-          </div>
+          <p className="mt-2 text-base text-ink">
+            The part worth reading is the privacy model. Every rule about who can see whom is a
+            Postgres row-level-security policy, never a check in React — the browser subscribes
+            without a filter and is only ever sent what it is entitled to. There is no location
+            history to leak: one row per person, replaced in place, gone ninety seconds after you
+            stop moving. It is all pinned down by tests, including a suite that signs in as two
+            people and proves a stranger cannot read the other one’s coordinates.
+          </p>
+          <p className="mt-2 text-base text-ink-faded">
+            Fork it, break it, send a pull request — or take it and build one for your own campus.
+          </p>
+          <a
+            href={AUTHOR.repo}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="brass mt-3 inline-block rounded-seal px-4 py-2.5 text-base no-underline"
+          >
+            {AUTHOR.repoLabel}
+          </a>
         </section>
 
         <section className="sheet rounded-xl px-5 py-5">

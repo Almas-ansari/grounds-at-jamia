@@ -54,6 +54,9 @@ export function MakerCredit({ variant = 'full' }: MakerCreditProps): JSX.Element
         <Row label="GitHub" href={AUTHOR.github}>
           {AUTHOR.githubHandle}
         </Row>
+        <Row label="LinkedIn" href={AUTHOR.linkedin}>
+          {AUTHOR.linkedinLabel}
+        </Row>
         <Row label="Portfolio" href={AUTHOR.portfolio}>
           {AUTHOR.portfolioLabel}
         </Row>

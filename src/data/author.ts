@@ -11,6 +11,8 @@ export const AUTHOR = {
   email: 'itsmealmas.ansari@gmail.com',
   github: 'https://github.com/Almas-ansari',
   githubHandle: 'github.com/Almas-ansari',
+  linkedin: 'https://www.linkedin.com/in/almasansari0/',
+  linkedinLabel: 'linkedin.com/in/almasansari0',
   portfolio: 'https://almas-ansari-i2oeimx.gamma.site',
   portfolioLabel: 'almas-ansari-i2oeimx.gamma.site',
   repo: 'https://github.com/Almas-ansari/grounds-at-jamia',
