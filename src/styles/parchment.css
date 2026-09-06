@@ -139,34 +139,32 @@
 }
 
 /* Leaflet's scale bar, in the map's own clothes. */
-/* Lift the scale bar and the credit clear of the instrument strip, and of the
-   wax seal that sits proud of its top edge. */
-.mm-map .leaflet-bottom.leaflet-left,
-.mm-map .leaflet-bottom.leaflet-right {
+/* The scale bar is an instrument — it is read against the ground it measures,
+   so it stays lifted clear of the instrument strip and of the wax seal that
+   sits proud of the strip's top edge. */
+.mm-map .leaflet-bottom.leaflet-left {
   bottom: 16.25rem;
-}
-
-.mm-map .leaflet-bottom.leaflet-right {
-  /* Clear of the instrument column on the right. */
-  right: 3.25rem;
 }
 
 /* On a short screen the strip is proportionally taller; give it more room. */
 @media (max-height: 720px) {
-  .mm-map .leaflet-bottom.leaflet-left,
-  .mm-map .leaflet-bottom.leaflet-right {
+  .mm-map .leaflet-bottom.leaflet-left {
     bottom: 16.75rem;
   }
 }
 
-/* Strip folded away: the scale bar and the credit can come back down. */
-.mm-strip-folded .leaflet-bottom.leaflet-left,
-.mm-strip-folded .leaflet-bottom.leaflet-right {
-  bottom: 4.25rem;
-}
+/* The credit is not an instrument, and lifting it with the scale bar left it
+   floating in the middle of a phone screen looking like something to tap. It
+   belongs in the plate margin, the way a printed sheet carries its imprint:
+   pinned to the very bottom edge, in the band .mm-strip-dock keeps clear for
+   it, present without being part of the map.
 
-.mm-map .leaflet-control-attribution {
-  max-width: 70vw;
+   The band has to be kept clear deliberately, because .mm-map is pinned to
+   z-index 0 — the whole map, controls included, sits beneath the chrome that
+   floats over it, so anything the strip covers is covered outright. */
+.mm-map .leaflet-bottom.leaflet-right {
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .mm-map .leaflet-control-scale-line {
@@ -184,14 +182,37 @@
 
 .mm-map .leaflet-control-attribution {
   font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 10.5px;
+  /* One line, always. The margin is only tall enough for one, and a second
+     would be swallowed by the strip — so the credit is never allowed to wrap,
+     however narrow the phone. */
+  font-size: 9px;
+  line-height: 1.5;
+  white-space: nowrap;
+  max-width: 100vw;
+  /* Leaflet holds every bottom control 10px off the corner. The credit is the
+     one thing here that should be flush with it. */
+  margin: 0;
   color: var(--ink-faded);
-  background: color-mix(in srgb, var(--parchment) 74%, transparent);
-  padding: 1px 6px;
+  background: color-mix(in srgb, var(--parchment) 58%, transparent);
+  padding: 0 5px 0 7px;
+  border-radius: 3px 0 0 0;
+  /* Legible if you look for it, invisible if you do not. */
+  opacity: 0.72;
 }
 
 .mm-map .leaflet-control-attribution a {
   color: var(--sepia-wash);
+}
+
+/* The instrument strip stops short of the screen edge, leaving a plate margin
+   at the foot of the sheet for the credit to sit in — and clearing the home
+   indicator on a phone that has one, which the strip did not do before.
+
+   The dock takes no pointer events of its own: that band is over the map, and
+   a dead strip along the bottom edge you cannot drag from is worse than the
+   few pixels it saves. Only the seal and the sheet itself are live. */
+.mm-strip-dock {
+  padding-bottom: calc(1.15rem + env(safe-area-inset-bottom, 0px));
 }
 
 .mm-canvas {

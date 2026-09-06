@@ -389,7 +389,7 @@ export default function MapScreen(): JSX.Element {
       )}
 
       {/* --- the instrument strip --------------------------------------- */}
-      <div className="absolute inset-x-0 bottom-0 z-30 p-3">
+      <div className="mm-strip-dock pointer-events-none absolute inset-x-0 bottom-0 z-30 px-3 pt-3">
         <div className={`relative mx-auto max-w-lg ${stripOpen ? '' : 'h-9'}`}>
           {/* The seal both fastens the strip down and lifts it away again. It
               is the only thing left on screen when the strip is folded, so it
@@ -401,7 +401,7 @@ export default function MapScreen(): JSX.Element {
             aria-controls="mm-strip"
             aria-label={stripOpen ? 'Hide the controls' : 'Show the controls'}
             title={stripOpen ? 'Hide the controls' : 'Show the controls'}
-            className={`wax-seal absolute left-1/2 z-10 h-9 w-9 -translate-x-1/2 rounded-full ${stripOpen ? '-top-4' : 'bottom-0'}`}
+            className={`wax-seal pointer-events-auto absolute left-1/2 z-10 h-9 w-9 -translate-x-1/2 rounded-full ${stripOpen ? '-top-4' : 'bottom-0'}`}
           >
             <span aria-hidden="true" className="block text-sm leading-none text-parchment">
               {stripOpen ? '▾' : '▴'}
@@ -411,7 +411,7 @@ export default function MapScreen(): JSX.Element {
           <div
             id="mm-strip"
             hidden={!stripOpen}
-            className="sheet rounded-xl px-3 pb-2.5 pt-4"
+            className="sheet pointer-events-auto rounded-xl px-3 pb-2.5 pt-4"
           >
 
           {user ? (
