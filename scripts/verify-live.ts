@@ -117,7 +117,7 @@ async function main(): Promise<void> {
   };
 
   try {
-    // --- 1. the trigger made profiles, in ghost --------------------------
+    // --- 1. the trigger made profiles, visible ---------------------------
     const { data: aliaProfile } = await alia.client.from('profiles').select('*').eq('id', alia.id).maybeSingle();
     check('a profile is created on sign-up', aliaProfile !== null, aliaProfile ? `@${aliaProfile.handle}` : 'none');
 
@@ -126,7 +126,7 @@ async function main(): Promise<void> {
       .select('visibility')
       .eq('user_id', alia.id)
       .maybeSingle();
-    check('new accounts start as ghosts', presence?.visibility === 'ghost', String(presence?.visibility));
+    check('new accounts start public', presence?.visibility === 'public', String(presence?.visibility));
 
     // --- 2. Alia goes visible and publishes a precise fix ----------------
     await alia.client.from('live_presence').upsert(
