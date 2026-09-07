@@ -27,7 +27,7 @@ insert into auth.users (id, email) values
   ('33333333-3333-3333-3333-333333333333', 'chandni@example.test'),
   ('44444444-4444-4444-4444-444444444444', 'danish@example.test');
 
--- The on_auth_user_created trigger has already made a profile and a GHOST
+-- The on_auth_user_created trigger has already made a profile and a PUBLIC
 -- presence row for each. That is the first thing worth asserting.
 select is(
   (select count(*)::int from public.profiles),
@@ -36,15 +36,15 @@ select is(
 );
 
 select is(
-  (select count(*)::int from public.live_presence where visibility = 'ghost'),
+  (select count(*)::int from public.live_presence where visibility = 'public'),
   4,
-  'ghost mode is the default for every new account — nobody starts on the map'
+  'a new account starts public — the map is not empty the first time you open it'
 );
 
 select is(
-  (select count(*)::int from public.live_presence where visibility <> 'ghost'),
+  (select count(*)::int from public.live_presence where visibility = 'ghost'),
   0,
-  'no new account is visible to anyone'
+  'nobody is put into ghost without asking for it'
 );
 
 -- Helper: become a signed-in user.
@@ -336,12 +336,16 @@ select throws_ok(
   null,
   'you cannot put another user on the map'
 );
+-- Asserted on the zone rather than on visibility. Every account now starts
+-- public, so the victim has a row of their own and a count of rows proves
+-- nothing; what the attacker tried to plant was a zone, and the absence of
+-- that is the thing worth checking.
 select is(
   (select count(*)::int from public.live_presence p
     where p.user_id = '44444444-4444-4444-4444-444444444444'
-      and p.visibility <> 'ghost'),
+      and p.zone_id is not null),
   0,
-  'and the attempt left no trace'
+  'and the attempt left no trace — the zone it tried to plant is not there'
 );
 select tests.logout();
 

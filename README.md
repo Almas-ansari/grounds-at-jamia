@@ -19,9 +19,11 @@ wash, the foot glyphs, the name ribbons, the compass rose and the app icon.
 
 This is the part worth reading.
 
-**Nobody is on the map until they say so.** A new account is created in *ghost*
-mode. Ghost means there is nothing to see: no zone, no coordinate, no row that
-any policy will hand to anybody.
+**A new account starts public**, and the sign-in panel says so before you sign
+in. That is a deliberate reversal of the original design, which started
+everyone in ghost — an empty map is one nobody opens twice. Ghost is one tap
+away in Settings, and it still means there is nothing to see: no zone, no
+coordinate, no row that any policy will hand to anybody.
 
 **There are three states, and they mean different things:**
 

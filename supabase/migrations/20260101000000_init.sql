@@ -100,7 +100,7 @@ create type public.visibility_mode as enum ('ghost', 'friends', 'public');
 create table public.live_presence (
   user_id uuid primary key references public.profiles(id) on delete cascade,
   zone_id text check (zone_id is null or char_length(zone_id) <= 48),
-  visibility public.visibility_mode not null default 'ghost',
+  visibility public.visibility_mode not null default 'public',
   updated_at timestamptz not null default now(),
   expires_at timestamptz not null default now() + interval '90 seconds'
 );
@@ -373,9 +373,9 @@ create trigger blocks_dissolve_friendship
   after insert on public.blocks
   for each row execute function public.block_dissolves_friendship();
 
--- 5. New accounts get a profile, and they get it as a ghost. The presence row
---    is created with visibility 'ghost', which means it is invisible to every
---    policy above and carries no zone. Nobody is on the map by default.
+-- 5. New accounts get a profile and a presence row. The row takes the column
+--    default, which is 'public' — see 20260907000000_visible_by_default.sql
+--    for why, and for the only place that starting state is written down.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -411,8 +411,8 @@ begin
   )
   on conflict (id) do nothing;
 
-  insert into public.live_presence (user_id, visibility)
-  values (new.id, 'ghost')
+  insert into public.live_presence (user_id)
+  values (new.id)
   on conflict (user_id) do nothing;
 
   return new;

@@ -39,10 +39,14 @@ for file in "$ROOT"/supabase/migrations/*.sql; do
 done
 
 echo "→ running supabase/tests/rls.sql"
-psql -U postgres -p "$PGPORT" -d marauders_test -X -q -f "$ROOT/supabase/tests/rls.sql" \
-  | grep -E '^\s*(ok|not ok|# )' || true
+# Run once, and judge that run. This used to run the suite a second time and
+# check *that* for failures — against a database the first run had already
+# written to, so a genuine failure could pass on the rerun and the script would
+# report success over the top of its own printed "not ok".
+suite_output=$(psql -U postgres -p "$PGPORT" -d marauders_test -X -q -f "$ROOT/supabase/tests/rls.sql" 2>&1)
+echo "$suite_output" | grep -E '^\s*(ok|not ok|# )' || true
 
-if psql -U postgres -p "$PGPORT" -d marauders_test -X -q -f "$ROOT/supabase/tests/rls.sql" 2>&1 | grep -q 'not ok'; then
+if echo "$suite_output" | grep -q 'not ok'; then
   echo "✗ RLS suite failed"
   exit 1
 fi

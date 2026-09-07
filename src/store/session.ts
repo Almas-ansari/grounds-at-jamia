@@ -116,10 +116,9 @@ async function createMissingProfile(user: User): Promise<Profile | null> {
       .maybeSingle();
 
     if (!error && data) {
-      // Ghost, like every other new account. Nobody appears without saying so.
-      await supabase
-        .from('live_presence')
-        .upsert({ user_id: user.id, visibility: 'ghost' }, { onConflict: 'user_id' });
+      // No visibility given, so the column default decides — the same starting
+      // state the trigger gives every other new account, written down once.
+      await supabase.from('live_presence').upsert({ user_id: user.id }, { onConflict: 'user_id' });
       return safeRow(profileSchema, data, 'profile');
     }
     if (error?.code !== '23505') return null;
@@ -192,7 +191,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         // people who look exactly like real ones.
         demo: false,
         soundEnabled: profile?.sound_enabled ?? get().soundEnabled,
-        visibility: (presence?.visibility as VisibilityMode | undefined) ?? 'ghost',
+        // No row yet means a brand-new account, which now starts visible.
+        visibility: (presence?.visibility as VisibilityMode | undefined) ?? 'public',
       });
     };
 

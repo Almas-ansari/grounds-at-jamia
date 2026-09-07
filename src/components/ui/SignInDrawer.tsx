@@ -68,8 +68,9 @@ export function SignInDrawer({ open, onClose }: SignInDrawerProps): JSX.Element 
       ) : (
         <div className="flex flex-col gap-4">
           <p className="text-base text-ink">
-            Signing in lets you see friends who are really on the grounds, and lets them see you —
-            but only once you say so. New accounts start as ghosts.
+            Signing in lets you see who is really on the grounds, and puts you on the map for
+            them. You start visible to everyone; Settings has friends-only and ghost, and ghost
+            takes you off the map at once.
           </p>
 
           <button
