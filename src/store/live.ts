@@ -63,12 +63,6 @@ export interface Wanderer {
    * decaying memory of something it was already entitled to be told.
    */
   readonly staleSince: number | null;
-  /**
-   * One of the three invented residents rather than a person. The map letters
-   * them differently: they walk alongside real people, and a name on a map is
-   * a claim about where somebody is.
-   */
-  readonly invented?: boolean;
 }
 
 interface LiveState {

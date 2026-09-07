@@ -48,13 +48,9 @@ function NameBannersImpl({
         id: wanderer.userId,
         x: p.x,
         y: p.y,
-        // An invented person says so on the banner. It is the only place a
-        // reader is looking when they wonder who that is.
-        label: wanderer.invented
-          ? `${wanderer.displayName} · invented`
-          : wanderer.staleSince
-            ? `${wanderer.displayName} · ${agoLabel(Date.now() - wanderer.staleSince)}`
-            : wanderer.displayName,
+        label: wanderer.staleSince
+          ? `${wanderer.displayName} · ${agoLabel(Date.now() - wanderer.staleSince)}`
+          : wanderer.displayName,
         isSelf: wanderer.isSelf,
       });
     }

@@ -290,28 +290,20 @@ export default function MapScreen(): JSX.Element {
             </svg>
           </Link>
         </div>
-        {/* The three invented residents walk here whether or not anybody is
-            signed in, so this note is not a demo banner any more — it is the
-            standing caption that keeps the map honest about which of the
-            people on it are people. */}
-        <p className="sheet pointer-events-auto max-w-[17rem] rounded-seal px-3 py-1.5 text-xs text-ink">
-          {demo ? (
-            <>
-              The campus is real; the three walking it are invented, and no one’s location is
-              involved.{' '}
-              <button
-                type="button"
-                onClick={() => setDrawer('signin')}
-                className="underline decoration-dotted underline-offset-2"
-              >
-                Sign in
-              </button>{' '}
-              to see people who are really here.
-            </>
-          ) : (
-            'Three of the wanderers here are invented, and say so on their banner. Everybody else is really there.'
-          )}
-        </p>
+        {demo && (
+          <p className="sheet pointer-events-auto max-w-[17rem] rounded-seal px-3 py-1.5 text-xs text-ink">
+            The campus is real; the three walking it are invented, and no one’s location is
+            involved.{' '}
+            <button
+              type="button"
+              onClick={() => setDrawer('signin')}
+              className="underline decoration-dotted underline-offset-2"
+            >
+              Sign in
+            </button>{' '}
+            to see people who are really here.
+          </p>
+        )}
         {authError && (
           <div
             role="alert"

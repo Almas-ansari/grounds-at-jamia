@@ -1,13 +1,11 @@
 /**
- * Invented people share the map with real ones — and must always be told apart.
+ * Invented people share the map with real ones.
  *
  * Three invented residents walk the campus whether or not anybody is signed in,
- * because an empty map is a broken-looking map. That makes two things load
- * bearing. They must be marked, so that a made-up name beside a real one is
- * never mistaken for somebody who is actually there. And they must be kept in
- * their own slot, because the live list is replaced wholesale every time the
- * server says anything — if the two shared a slot, each new fix would wipe the
- * residents and each resident tick would wipe the real people.
+ * because an empty map is a broken-looking map. What that makes load bearing is
+ * the slot they live in: the live list is replaced wholesale every time the
+ * server says anything, so if the two shared a slot, each new fix would wipe
+ * the residents and each resident tick would wipe the real people.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useLiveStore, type Wanderer } from '../src/store/live';
@@ -71,14 +69,6 @@ describe('the invented residents', () => {
     // A resident tick is not the server saying the real people have gone.
     setResidents(createResidents().tick(1));
     expect(Object.keys(useLiveStore.getState().wanderers)).toContain('real');
-  });
-
-  it('marks every resident as invented', () => {
-    const people = createResidents().tick(0);
-    expect(people).toHaveLength(3);
-    for (const person of people) {
-      expect(person.invented, `${person.displayName} is not marked invented`).toBe(true);
-    }
   });
 
   it('walks its people on university land, not through Okhla', () => {

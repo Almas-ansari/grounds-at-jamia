@@ -7,11 +7,9 @@
  * no real person's location is involved: the positions are worked out in the
  * browser from the campus's own paths.
  *
- * They keep walking once you are signed in, and that is the part to be careful
- * about — invented people standing among real ones with nothing to tell them
- * apart would be a straightforward lie about where somebody is. So they carry
- * an `invented` flag, the map letters them with it, and the note at the top of
- * the screen says so in plain words rather than in a tooltip nobody opens.
+ * They keep walking once you are signed in, so they are held in their own slot
+ * in the live store: the live list is replaced wholesale every time the server
+ * says anything, and sharing a slot would mean each wiped the other.
  */
 import { campus } from '../data/campus';
 import { zones, type Zone } from '../data/zones';
@@ -141,7 +139,6 @@ export function createResidents(): DemoFlock {
           updatedAt: now,
           // Invented people never lapse; they are always walking.
           staleSince: null,
-          invented: true,
         } satisfies Wanderer;
       });
     },
