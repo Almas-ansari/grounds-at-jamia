@@ -1,34 +1,40 @@
 /**
- * Demonstration wanderers.
+ * The three who are always here.
  *
- * Signed out, the map still has to be worth looking at, so six invented people
- * walk the real footpaths. Nothing here touches the database and none of these
- * names belongs to anybody: no real person's location is involved, which is
- * exactly why the map says so out loud while this is running.
+ * An empty map teaches nobody anything, and nobody signs in to an empty map to
+ * find out what it does — so three invented people walk the real footpaths
+ * whether or not anybody else is about. Nothing here touches the database and
+ * no real person's location is involved: the positions are worked out in the
+ * browser from the campus's own paths.
+ *
+ * They keep walking once you are signed in, and that is the part to be careful
+ * about — invented people standing among real ones with nothing to tell them
+ * apart would be a straightforward lie about where somebody is. So they carry
+ * an `invented` flag, the map letters them with it, and the note at the top of
+ * the screen says so in plain words rather than in a tooltip nobody opens.
  */
 import { campus } from '../data/campus';
 import { zones, type Zone } from '../data/zones';
 import type { Wanderer } from '../store/live';
 import { advanceAlongRoute, buildWalkGraph, routeLengthMetres, type WalkGraph } from './walkgraph';
-import { EAST, NORTH, SOUTH, WEST, type LngLat } from './projection';
+import { distanceMetres, EAST, NORTH, SOUTH, WEST, type LngLat } from './projection';
 import { hashString, seededRandom } from './rng';
 
 /**
- * An unhurried campus pace. A real walk is about 1.3 m/s; at the scale a phone
- * shows the whole estate that reads as scurrying, but much below this and the
- * demonstration walkers never lay enough prints to show what a trail is for.
+ * A stroll, not a walk. A real walk is about 1.3 m/s; at the scale a phone
+ * shows the whole estate that reads as scurrying. This is slow enough to look
+ * like somebody in no hurry and still comfortably above the speed at which the
+ * trail machinery decides a person is standing still and stops laying prints —
+ * below that they would drift along leaving nothing behind them.
  */
-export const WALK_SPEED_MS = 0.95;
+export const RESIDENT_SPEED_MS = 0.6;
 
-const INVENTED_NAMES = [
-  'Rukhsana',
-  'Imtiaz',
-  'Parveen',
-  'Yusuf',
-  'Shabana',
-  'Zaheer',
-  'Nasreen',
-  'Faraz',
+/** Named, because three people with names read as a campus and three
+ *  placeholders read as a loading state. */
+const RESIDENTS = [
+  { displayName: 'Almas Ansari', handle: 'almas_ansari' },
+  { displayName: 'Abdullah Shakir', handle: 'abdullah_shakir' },
+  { displayName: 'Mohd Asif', handle: 'mohd_asif' },
 ] as const;
 
 interface Walker {
@@ -54,7 +60,24 @@ function pickZone(random: () => number, notThis?: Zone): Zone {
   return candidates[Math.floor(random() * candidates.length)] ?? zones[0]!;
 }
 
-export function createDemoFlock(count = 6): DemoFlock {
+/**
+ * Where they are standing when the page opens.
+ *
+ * Left to wander from anywhere, three people on a campus this size are easy to
+ * miss entirely — the map opens zoomed in, and a first glance showing nobody is
+ * exactly the empty map they exist to prevent. So they start on the three
+ * places nearest the middle of the grounds, which the opening view contains,
+ * and wander outwards from there.
+ */
+const CENTRAL_ZONES: readonly Zone[] = [...zones]
+  .filter((z) => z.kind !== 'gate')
+  .sort(
+    (a, b) =>
+      distanceMetres(a.centroid, { lat: (NORTH + SOUTH) / 2, lng: (WEST + EAST) / 2 }) -
+      distanceMetres(b.centroid, { lat: (NORTH + SOUTH) / 2, lng: (WEST + EAST) / 2 }),
+  );
+
+export function createResidents(): DemoFlock {
   const graph: WalkGraph = buildWalkGraph(campus.features, {
     west: WEST,
     south: SOUTH,
@@ -62,19 +85,21 @@ export function createDemoFlock(count = 6): DemoFlock {
     north: NORTH,
   });
 
-  const walkers: Walker[] = Array.from({ length: count }, (_, i) => {
-    const random = seededRandom(hashString(`demo-${i}`));
-    const from = pickZone(random);
+  const walkers: Walker[] = RESIDENTS.map((who, i) => {
+    const random = seededRandom(hashString(`resident-${i}`));
+    const from = CENTRAL_ZONES[i] ?? pickZone(random);
     const to = pickZone(random, from);
     const route = graph.route(from.centroid, to.centroid);
     return {
-      userId: `demo-${i}`,
-      displayName: INVENTED_NAMES[i % INVENTED_NAMES.length]!,
-      handle: `demo_${i}`,
+      userId: `resident-${i}`,
+      displayName: who.displayName,
+      handle: who.handle,
       route,
       routeLength: routeLengthMetres(route),
-      // Stagger them so they do not all set off in lockstep.
-      distance: random() * Math.max(1, routeLengthMetres(route)) * 0.6,
+      // Stagger them so they do not all set off in lockstep — but only a
+      // little, or the head start carries them out of the opening view before
+      // anybody has seen them.
+      distance: random() * Math.max(1, routeLengthMetres(route)) * 0.12,
       dwell: 6 + random() * 30,
       target: to,
       point: from.centroid,
@@ -91,7 +116,7 @@ export function createDemoFlock(count = 6): DemoFlock {
         if (walker.dwell > 0) {
           walker.dwell -= deltaSeconds;
         } else {
-          walker.distance += WALK_SPEED_MS * deltaSeconds;
+          walker.distance += RESIDENT_SPEED_MS * deltaSeconds;
           const step = advanceAlongRoute(walker.route, walker.distance);
           walker.point = step.point;
           walker.bearing = step.bearing;
@@ -116,6 +141,7 @@ export function createDemoFlock(count = 6): DemoFlock {
           updatedAt: now,
           // Invented people never lapse; they are always walking.
           staleSince: null,
+          invented: true,
         } satisfies Wanderer;
       });
     },

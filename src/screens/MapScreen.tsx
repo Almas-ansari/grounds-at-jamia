@@ -19,7 +19,7 @@ import { useSessionStore, useReducedMotion } from '../store/session';
 import { useLiveStore } from '../store/live';
 import { useGeoStore } from '../store/geo';
 import { useFriendsStore } from '../store/friends';
-import { createDemoFlock } from '../lib/demo';
+import { createResidents } from '../lib/demo';
 import { playQuillScratch } from '../lib/audio';
 import { zoneName, type Zone } from '../data/zones';
 import { MakerCredit } from '../components/ui/MakerCredit';
@@ -73,7 +73,7 @@ export default function MapScreen(): JSX.Element {
 
   const wanderers = useLiveStore((s) => s.wanderers);
   const trails = useLiveStore((s) => s.trails);
-  const setWanderers = useLiveStore((s) => s.setWanderers);
+  const setResidents = useLiveStore((s) => s.setResidents);
   const tickTrails = useLiveStore((s) => s.tickTrails);
   const startLive = useLiveStore((s) => s.start);
   const stopLive = useLiveStore((s) => s.stop);
@@ -140,24 +140,26 @@ export default function MapScreen(): JSX.Element {
     return () => clearInterval(id);
   }, [tickTrails]);
 
-  /* --- invented wanderers, and only while signed out ------------------- */
+  /* --- the three who are always here ------------------------------------ */
   useEffect(() => {
-    // Gated on the user rather than on `demo`, and cleared on the way out:
-    // the moment somebody signs in the invented people have to go, or the map
-    // is showing made-up names next to real ones with nothing to tell them
-    // apart.
-    if (user) return undefined;
-    const flock = createDemoFlock(6);
+    // Not gated on signing in. An empty map is a broken-looking map, and the
+    // first thing anybody following a link sees would otherwise be a campus
+    // with nobody on it. They go into their own slot in the store rather than
+    // into the live list, so the server's people and these three never
+    // overwrite one another — and they are lettered as invented, because
+    // walking them among real people without saying so would be a lie about
+    // where somebody is.
+    const flock = createResidents();
     // A slow tick, and each tick advances the walkers by exactly its own
     // length, so the pace on screen is the pace in the model.
     const TICK_MS = 1500;
-    setWanderers(flock.tick(0));
-    const id = setInterval(() => setWanderers(flock.tick(TICK_MS / 1000)), TICK_MS);
+    setResidents(flock.tick(0));
+    const id = setInterval(() => setResidents(flock.tick(TICK_MS / 1000)), TICK_MS);
     return () => {
       clearInterval(id);
-      setWanderers([]);
+      setResidents([]);
     };
-  }, [user, setWanderers]);
+  }, [setResidents]);
 
   /* --- publishing ------------------------------------------------------ */
   useEffect(() => {
@@ -288,20 +290,28 @@ export default function MapScreen(): JSX.Element {
             </svg>
           </Link>
         </div>
-        {demo && (
-          <p className="sheet pointer-events-auto max-w-[17rem] rounded-seal px-3 py-1.5 text-xs text-ink">
-            Demonstration: the campus is real, the wanderers are invented, and no one’s location is
-            involved.{' '}
-            <button
-              type="button"
-              onClick={() => setDrawer('signin')}
-              className="underline decoration-dotted underline-offset-2"
-            >
-              Sign in
-            </button>{' '}
-            to see people who are really here.
-          </p>
-        )}
+        {/* The three invented residents walk here whether or not anybody is
+            signed in, so this note is not a demo banner any more — it is the
+            standing caption that keeps the map honest about which of the
+            people on it are people. */}
+        <p className="sheet pointer-events-auto max-w-[17rem] rounded-seal px-3 py-1.5 text-xs text-ink">
+          {demo ? (
+            <>
+              The campus is real; the three walking it are invented, and no one’s location is
+              involved.{' '}
+              <button
+                type="button"
+                onClick={() => setDrawer('signin')}
+                className="underline decoration-dotted underline-offset-2"
+              >
+                Sign in
+              </button>{' '}
+              to see people who are really here.
+            </>
+          ) : (
+            'Three of the wanderers here are invented, and say so on their banner. Everybody else is really there.'
+          )}
+        </p>
         {authError && (
           <div
             role="alert"

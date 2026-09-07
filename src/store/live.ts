@@ -63,6 +63,12 @@ export interface Wanderer {
    * decaying memory of something it was already entitled to be told.
    */
   readonly staleSince: number | null;
+  /**
+   * One of the three invented residents rather than a person. The map letters
+   * them differently: they walk alongside real people, and a name on a map is
+   * a claim about where somebody is.
+   */
+  readonly invented?: boolean;
 }
 
 interface LiveState {
@@ -73,6 +79,13 @@ interface LiveState {
   stop: () => void;
   /** Used by demo mode, which has no server to talk to. */
   setWanderers: (list: readonly Wanderer[]) => void;
+  /**
+   * The invented three, who are on the map whether or not anyone is signed in.
+   * Kept apart from the live list so that neither can wipe the other: the
+   * server's people arrive and depart constantly, and the residents are not
+   * the server's to take away.
+   */
+  setResidents: (list: readonly Wanderer[]) => void;
   /**
    * Lay footprints. Called on a steady tick rather than when positions arrive,
    * so the trail keeps an even cadence however irregularly the updates come.
@@ -87,6 +100,13 @@ interface LiveState {
  * from it directly — the trail does.
  */
 const motion = new Map<string, Motion>();
+/**
+ * The two halves the visible map is composed from. Module-level rather than
+ * store state because nothing renders from either one directly — they exist
+ * only to be merged into `wanderers`, which is what React reads.
+ */
+let residents: readonly Wanderer[] = [];
+let liveList: readonly Wanderer[] = [];
 /** A sensible crossing time when we have nothing to go on yet. */
 const DEFAULT_CROSSING_MS = 1500;
 /** Updates further apart than this are treated as a jump, not a walk. */
@@ -166,11 +186,14 @@ export const useLiveStore = create<LiveState>((set, get) => ({
   connected: false,
 
   setWanderers: (list) => {
+    liveList = list;
     const now = Date.now();
     const wanderers: Record<string, Wanderer> = {};
     const trails = { ...get().trails };
 
-    for (const w of list) {
+    // Residents first, so a real person sharing an id would win — they cannot,
+    // but the order says which of the two is the authority.
+    for (const w of [...residents, ...list]) {
       wanderers[w.userId] = w;
       const to = project(w.point.lat, w.point.lng);
       const previous = motion.get(w.userId);
@@ -207,6 +230,11 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     }
 
     set({ wanderers, trails });
+  },
+
+  setResidents: (list) => {
+    residents = list;
+    get().setWanderers(liveList);
   },
 
   tickTrails: () => {
@@ -383,6 +411,9 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     selfUserId = null;
     motion.clear();
     staleAt.clear();
+    liveList = [];
     set({ wanderers: {}, trails: {}, connected: false });
+    // Signing out empties the map of real people; the invented three stay.
+    get().setWanderers([]);
   },
 }));
